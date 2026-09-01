@@ -189,14 +189,14 @@
     <!-- ビューA: 稼働モニター (ダッシュボード) -->
     <div id="view-dashboard" class="flex-1 flex flex-col gap-2.5 overflow-hidden">
         
-        <!-- 性能稼働率パネル (最大アピールポイント：特大数字＆発光グロー) -->
-        <div class="bg-gradient-to-b from-slate-900 via-slate-850 to-slate-900 border-2 sm:border-4 border-emerald-500/90 rounded-2xl py-2 px-4 flex flex-col justify-center items-center relative transition-all shadow-xl shadow-emerald-950/40 flex-[1.1] shrink-0" id="rate-box">
-            <p class="text-xs sm:text-sm font-black text-emerald-400 tracking-widest uppercase mb-0.5">
+        <!-- 性能稼働率パネル (コンパクトかつ存在感のあるバランス比率) -->
+        <div class="bg-gradient-to-b from-slate-900 via-slate-850 to-slate-900 border-2 sm:border-4 border-emerald-500/90 rounded-2xl py-2 px-4 flex flex-col justify-center items-center relative transition-all shadow-xl shadow-emerald-950/40 flex-[0.85] shrink-0" id="rate-box">
+            <p class="text-xs font-black text-emerald-400 tracking-widest uppercase mb-0.5">
                 CURRENT PERFORMANCE RATE / 現在の性能稼働率
             </p>
             <div class="flex items-baseline justify-center">
-                <span class="font-mono text-6xl sm:text-8xl font-black text-emerald-400 tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.45)]" id="perf-rate">100.0</span>
-                <span class="text-4xl sm:text-5xl text-emerald-400 font-black ml-1.5">%</span>
+                <span class="font-mono text-6xl sm:text-7xl font-black text-emerald-400 tracking-tighter drop-shadow-[0_0_20px_rgba(16,185,129,0.45)]" id="perf-rate">100.0</span>
+                <span class="text-3xl sm:text-4xl text-emerald-400 font-black ml-1.5">%</span>
             </div>
             <div class="absolute right-4 top-3 hidden sm:flex items-center gap-1.5 bg-slate-950/90 px-3 py-1 rounded-full border border-slate-700 text-[9px] font-bold text-slate-400">
                 <i class="fa-solid fa-calculator text-emerald-400"></i>
@@ -207,7 +207,7 @@
         <!-- メイングリッド -->
         <div class="grid grid-cols-12 gap-2.5 flex-1 min-h-0 overflow-hidden">
             
-            <!-- 左側：品番・SPM・作業員選択エリア -->
+            <!-- 左側：品番・SPM・作業員選択エリア (4列) -->
             <div class="col-span-4 flex flex-col gap-2 h-full min-h-0">
                 <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
                     <p class="text-[10px] font-black text-emerald-400 mb-0.5 flex items-center justify-between">
@@ -252,7 +252,7 @@
                 </div>
             </div>
 
-            <!-- 中央：時刻・タイマーコンテナ -->
+            <!-- 中央：時刻・タイマーコンテナ (5列) -->
             <div class="col-span-5 bg-slate-950 border-2 border-slate-800 rounded-2xl p-2.5 flex flex-col justify-between items-center h-full min-h-0">
                 <div class="w-full grid grid-cols-2 gap-2 bg-slate-900 border border-slate-800 rounded-xl px-2.5 py-1">
                     <div class="text-left">
@@ -293,7 +293,7 @@
                 </div>
             </div>
 
-            <!-- 右側：目標数・自動集計生産数 -->
+            <!-- 右側：目標数・自動集計生産数 (3列) -->
             <div class="col-span-3 flex flex-col gap-2 h-full min-h-0">
                 <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-center flex-1">
                     <p class="text-[10px] font-black text-slate-400 mb-0.5 flex items-center gap-1">
@@ -328,82 +328,81 @@
 
     <!-- ビューB: 日報・履歴一覧 -->
     <div id="view-history" class="hidden flex-1 flex flex-col gap-2.5 fade-in overflow-hidden">
-            <div class="flex justify-between items-center flex-wrap gap-2">
-                <div class="flex items-center gap-2 flex-wrap">
-                    <h2 class="text-sm sm:text-base font-black text-emerald-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-list-check"></i>
-                        <span>保存済み部品別日報データ</span>
-                    </h2>
-                    
-                    <!-- 設備名選択プルダウン (保持機能あり) -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-400 flex items-center gap-1">
-                        <i class="fa-solid fa-gears text-emerald-400 text-[11px]"></i>
-                        <span class="font-bold text-[11px]">設備名:</span>
-                        <select id="equipment-select" class="bg-slate-900 border border-slate-700 text-emerald-400 font-bold rounded px-1.5 py-0.5 text-xs focus:outline-none cursor-pointer">
-                            <option value="1軸100tプレス">1軸100tプレス</option>
-                            <option value="2軸200tプレス">2軸200tプレス</option>
-                            <option value="高速300tプレス">高速300tプレス</option>
-                            <option value="Aライン プレス機">Aライン プレス機</option>
-                            <option value="Bライン プレス機">Bライン プレス機</option>
-                        </select>
-                    </div>
-
-                    <!-- 報告先メールアドレス -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-400 flex items-center gap-1">
-                        <i class="fa-solid fa-envelope text-[11px]"></i>
-                        <span class="text-[11px]">報告先:</span>
-                        <input type="email" id="report-email" value="factory-report@example.com" class="bg-transparent border-none text-emerald-400 font-bold focus:outline-none text-xs w-[160px]" title="終業報告の送信先メールアドレス">
-                    </div>
+        <div class="flex justify-between items-center flex-wrap gap-2">
+            <div class="flex items-center gap-2 flex-wrap">
+                <h2 class="text-sm sm:text-base font-black text-emerald-400 flex items-center gap-1.5">
+                    <i class="fa-solid fa-list-check"></i>
+                    <span>保存済み部品別日報データ</span>
+                </h2>
+                
+                <!-- 設備名選択プルダウン (保持機能あり) -->
+                <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-400 flex items-center gap-1">
+                    <i class="fa-solid fa-gears text-emerald-400 text-[11px]"></i>
+                    <span class="font-bold text-[11px]">設備名:</span>
+                    <select id="equipment-select" class="bg-slate-900 border border-slate-700 text-emerald-400 font-bold rounded px-1.5 py-0.5 text-xs focus:outline-none cursor-pointer">
+                        <option value="1軸100tプレス">1軸100tプレス</option>
+                        <option value="2軸200tプレス">2軸200tプレス</option>
+                        <option value="高速300tプレス">高速300tプレス</option>
+                        <option value="Aライン プレス機">Aライン プレス機</option>
+                        <option value="Bライン プレス機">Bライン プレス機</option>
+                    </select>
                 </div>
 
-                <!-- メール送信 ＆ Excel出力ボタングループ -->
-                <div class="flex items-center gap-2">
-                    <button class="bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 px-3 py-1 rounded-lg text-xs font-black flex items-center gap-1.5 active:scale-95 transition-all shadow-md shadow-sky-950/50" onclick="sendSelectedMailWithExcel()">
-                        <i class="fa-solid fa-paper-plane text-[11px]"></i>
-                        <span>選択中の日報をメール送信</span>
-                    </button>
-
-                    <button class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 border border-emerald-600 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all" onclick="exportExcelReportFormat()">
-                        <i class="fa-solid fa-file-excel text-[11px]"></i>
-                        <span>エクセルで保存</span>
-                    </button>
+                <!-- 報告先メールアドレス -->
+                <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-400 flex items-center gap-1">
+                    <i class="fa-solid fa-envelope text-[11px]"></i>
+                    <span class="text-[11px]">報告先:</span>
+                    <input type="email" id="report-email" value="factory-report@example.com" class="bg-transparent border-none text-emerald-400 font-bold focus:outline-none text-xs w-[160px]" title="終業報告の送信先メールアドレス">
                 </div>
             </div>
-            
-            <div class="flex-1 overflow-auto rounded-xl border border-slate-800 bg-slate-950">
-                <table class="w-full text-left text-xs border-collapse" id="history-table">
-                    <thead>
-                        <tr class="bg-slate-900 text-slate-400 border-b border-slate-800 sticky top-0 z-10">
-                            <th class="p-2 font-bold text-center w-8">
-                                <input type="checkbox" id="check-all" onclick="toggleSelectAll(this)" title="全選択/全解除" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
-                            </th>
-                            <th class="p-2 font-bold">日付</th>
-                            <th class="p-2 font-bold text-amber-400">作業員</th>
-                            <th class="p-2 font-bold text-center text-amber-200">人数</th>
-                            <th class="p-2 font-bold text-emerald-400">部品番号</th>
-                            <th class="p-2 font-bold">開始</th>
-                            <th class="p-2 font-bold">終了</th>
-                            <th class="p-2 font-bold text-white">生産数</th>
-                            <th class="p-2 font-bold text-amber-300">材料交換</th>
-                            <th class="p-2 font-bold text-purple-300">スクラップ</th>
-                            <th class="p-2 font-bold text-rose-300">停止理由</th>
-                            <th class="p-2 font-bold">稼働時間</th>
-                            <th class="p-2 font-bold text-amber-500">金型交換</th>
-                            <th class="p-2 font-bold text-sky-400">計画停止</th>
-                            <th class="p-2 font-bold text-rose-500">異常停止</th>
-                            <th class="p-2 font-bold text-emerald-400 text-right">性能稼働率</th>
-                            <th class="p-2 font-bold text-center">操作</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-900" id="history-body">
-                    </tbody>
-                </table>
+
+            <!-- メール送信 ＆ Excel出力ボタングループ -->
+            <div class="flex items-center gap-2">
+                <button class="bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 px-3 py-1 rounded-lg text-xs font-black flex items-center gap-1.5 active:scale-95 transition-all shadow-md shadow-sky-950/50" onclick="sendSelectedMailWithExcel()">
+                    <i class="fa-solid fa-paper-plane text-[11px]"></i>
+                    <span>選択中の日報をメール送信</span>
+                </button>
+
+                <button class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 border border-emerald-600 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all" onclick="exportExcelReportFormat()">
+                    <i class="fa-solid fa-file-excel text-[11px]"></i>
+                    <span>エクセルで保存</span>
+                </button>
             </div>
+        </div>
+        
+        <div class="flex-1 overflow-auto rounded-xl border border-slate-800 bg-slate-950">
+            <table class="w-full text-left text-xs border-collapse" id="history-table">
+                <thead>
+                    <tr class="bg-slate-900 text-slate-400 border-b border-slate-800 sticky top-0 z-10">
+                        <th class="p-2 font-bold text-center w-8">
+                            <input type="checkbox" id="check-all" onclick="toggleSelectAll(this)" title="全選択/全解除" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+                        </th>
+                        <th class="p-2 font-bold">日付</th>
+                        <th class="p-2 font-bold text-amber-400">作業員</th>
+                        <th class="p-2 font-bold text-center text-amber-200">人数</th>
+                        <th class="p-2 font-bold text-emerald-400">部品番号</th>
+                        <th class="p-2 font-bold">開始</th>
+                        <th class="p-2 font-bold">終了</th>
+                        <th class="p-2 font-bold text-white">生産数</th>
+                        <th class="p-2 font-bold text-amber-300">材料交換</th>
+                        <th class="p-2 font-bold text-purple-300">スクラップ</th>
+                        <th class="p-2 font-bold text-rose-300">停止理由</th>
+                        <th class="p-2 font-bold">稼働時間</th>
+                        <th class="p-2 font-bold text-amber-500">金型交換</th>
+                        <th class="p-2 font-bold text-sky-400">計画停止</th>
+                        <th class="p-2 font-bold text-rose-500">異常停止</th>
+                        <th class="p-2 font-bold text-emerald-400 text-right">性能稼働率</th>
+                        <th class="p-2 font-bold text-center">操作</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-900" id="history-body">
+                </tbody>
+            </table>
         </div>
     </div>
 
     <!-- 最下部：製造開始・終了 ＆ ステータス切り替えボタン -->
-    <div class="grid grid-cols-12 gap-2.5 h-[84px] sm:h-[90px] shrink-0 mt-auto z-20">
+    <div class="grid grid-cols-12 gap-2.5 h-[80px] sm:h-[84px] shrink-0 mt-auto z-20">
         
         <div class="col-span-3 grid grid-rows-2 gap-1.5 h-full">
             <button class="bg-slate-800 border border-slate-700 hover:bg-slate-750 rounded-xl text-slate-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-md" onclick="startMfg()" id="btn-start-shift">
@@ -462,6 +461,7 @@
     </div>
 </div>
 
+<!-- 製造終了・実績入力モーダル -->
 <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="end-shift-modal">
     <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[480px] p-5 rounded-2xl shadow-2xl text-center transform scale-95 transition-all duration-200" id="end-shift-modal-card">
         <h3 class="text-lg font-black text-rose-400 flex items-center justify-center gap-2 mb-3">
@@ -502,6 +502,7 @@
     </div>
 </div>
 
+<!-- 作業員名登録モーダル -->
 <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="operator-modal">
     <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[420px] p-5 rounded-2xl shadow-2xl text-left transform scale-95 transition-all duration-200">
         <h3 class="text-lg font-black text-emerald-400 flex items-center gap-2 mb-3">
@@ -533,6 +534,7 @@
     </div>
 </div>
 
+<!-- 削除確認モーダル -->
 <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="delete-confirm-modal">
     <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[400px] p-5 rounded-2xl shadow-2xl text-center transform scale-95 transition-all duration-200">
         <h3 class="text-lg font-black text-rose-400 flex items-center justify-center gap-2 mb-2">
@@ -548,6 +550,7 @@
     </div>
 </div>
 
+<!-- 日報全項目修正モーダル -->
 <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="edit-record-modal">
     <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[560px] p-5 rounded-2xl shadow-2xl text-left transform scale-95 transition-all duration-200">
         <h3 class="text-lg font-black text-emerald-400 flex items-center gap-2 mb-3">
@@ -620,11 +623,13 @@
     </div>
 </div>
 
+<!-- トースト通知 -->
 <div class="fixed top-8 left-1/2 -translate-x-1/2 bg-emerald-600 border border-emerald-400 text-white px-6 py-3 rounded-full font-bold text-sm shadow-2xl flex items-center gap-2 transition-all opacity-0 pointer-events-none z-50" id="toast">
     <i class="fa-solid fa-circle-check"></i>
     <span id="toast-text">データを保存しました</span>
 </div>
 
+<!-- アプリケーションスクリプト -->
 <script>
     const PART_MASTERS = {
         'SP-200': 15.0,
@@ -1045,7 +1050,6 @@
         }
     }
 
-    // Excelフォーマット生成関数 (【生産数】表記、材料/スクラップ交換、停止理由に対応)
     // Excelフォーマット生成関数
     function generateExcelReportBlob(selectedLogs) {
         const currentEquip = equipmentSelect.value || '1軸100tプレス';
@@ -1101,22 +1105,22 @@
 
         const ws = XLSX.utils.aoa_to_sheet(sheetData);
         ws['!cols'] = [
-            { wch: 12 }, // 日付
-            { wch: 16 }, // 設備名
-            { wch: 18 }, // 作業員
-            { wch: 10 }, // 作業人数
-            { wch: 16 }, // 部品番号
-            { wch: 12 }, // 開始
-            { wch: 12 }, // 終了
-            { wch: 12 }, // 生産数
-            { wch: 12 }, // 材料交換
-            { wch: 14 }, // スクラップ交換
-            { wch: 20 }, // 停止理由
-            { wch: 14 }, // 稼働時間
-            { wch: 14 }, // 金型交換
-            { wch: 14 }, // 計画停止
-            { wch: 14 }, // 異常停止
-            { wch: 14 }  // 性能稼働率
+            { wch: 12 },
+            { wch: 16 },
+            { wch: 18 },
+            { wch: 10 },
+            { wch: 16 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 12 },
+            { wch: 14 },
+            { wch: 20 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 14 },
+            { wch: 14 }
         ];
 
         const wb = XLSX.utils.book_new();
@@ -1318,7 +1322,6 @@
         showToast("日報データを修正・保存しました");
     }
 
-    // モーダル形式データクリア関数
     function openResetModal() {
         const modal = document.getElementById('reset-modal');
         if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
@@ -1433,7 +1436,7 @@
         document.querySelectorAll('.btn').forEach(b => {
             b.classList.remove('active');
             b.classList.add('pointer-events-none');
-            b.style.opacity = '0.15';
+            b.style.opacity = '0.4';
         });
         statusLabel.className = 'status-indicator transition-all';
         statusLabel.innerText = '待機中';
@@ -1467,13 +1470,13 @@
         if (viewName === 'dashboard') {
             dashboard.classList.remove('hidden');
             history.classList.add('hidden');
-            tabDash.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow";
-            tabHist.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+            tabDash.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow";
+            tabHist.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
         } else {
             dashboard.classList.add('hidden');
             history.classList.remove('hidden');
-            tabDash.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
-            tabHist.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow";
+            tabDash.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+            tabHist.className = "px-3.5 py-1.5 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow";
             renderHistoryTable();
         }
     }
