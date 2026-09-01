@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>プレス生産管理見える化 - iPad専用プロ版 v3.3</title>
+    
+    <!-- 外部ライブラリの読み込み -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Noto+Sans+JP:wght@400;700;900&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <!-- Excel(.xlsx)出力用SheetJSライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Noto Sans JP', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+
+        html, body {
+            background-color: #020617;
+            height: 100dvh;
+            width: 100vw;
+            overflow: hidden;
+        }
+
+        /* ボタン基本スタイル */
+        .btn {
+            opacity: 0.4;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .btn.active {
+            opacity: 1 !important;
+            transform: scale(1.02);
+            box-shadow: 0 10px 20px -3px rgba(0, 0, 0, 0.4);
+        }
+
+        /* メインボタンの色分け */
+        .btn-running { background: #059669; border: 3px solid #34d399; }
+        .btn-mold { background: transparent; border: 3px solid #ffffff; color: #ffffff; }
+        .btn-break { background: transparent; border: 3px solid #ffffff; color: #ffffff; }
+        .btn-stop { background: transparent; border: 3px solid #ffffff; color: #ffffff; }
+
+        .btn-running, .btn-pause {
+            grid-column: span 1;
+            font-size: 26px !important;
+            box-shadow: 0 0 30px rgba(16, 185, 129, 0.45) !important;
+            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+            opacity: 0.4;
+        }
+        
+        .btn-pause {
+            background: #475569 !important;
+            border: 3px solid #94a3b8 !important;
+            box-shadow: 0 0 30px rgba(148, 163, 184, 0.45) !important;
+        }
+
+        /* ヘッダー中央：現在のステータス表示 */
+        .status-indicator {
+            padding: 6px 20px;
+            border-radius: 30px;
+            font-size: 15px;
+            font-weight: 900;
+            background: #1e293b;
+            border: 2px solid #334155;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .status-RUNNING { 
+            background-color: #047857 !important; 
+            color: #ffffff !important; 
+            border-color: #34d399 !important; 
+            box-shadow: 0 0 20px rgba(52, 211, 153, 0.6) !important;
+        }
+        .status-PAUSE { 
+            background-color: #334155 !important; 
+            color: #ffffff !important; 
+            border-color: #94a3b8 !important; 
+            box-shadow: 0 0 15px rgba(148, 163, 184, 0.4) !important;
+        }
+        .status-MOLD { 
+            background-color: #b45309 !important; 
+            color: #ffffff !important; 
+            border-color: #fbbf24 !important; 
+            box-shadow: 0 0 20px rgba(251, 191, 36, 0.5) !important;
+        }
+        .status-BREAK { 
+            background-color: #1d4ed8 !important; 
+            color: #ffffff !important; 
+            border-color: #60a5fa !important; 
+            box-shadow: 0 0 20px rgba(96, 165, 250, 0.5) !important;
+        }
+        .status-STOP { 
+            background-color: #b91c1c !important; 
+            color: #ffffff !important; 
+            border-color: #f87171 !important; 
+            box-shadow: 0 0 25px rgba(248, 113, 113, 0.8) !important;
+            animation: status-blink 1s infinite;
+        }
+
+        @keyframes status-blink { 
+            0%, 100% { opacity: 1; filter: brightness(1); } 
+            50% { opacity: 0.8; filter: brightness(1.3); } 
+        }
+
+        /* 作業員ボタン */
+        .operator-btn {
+            border: 1.5px solid #334155;
+            background: #0f172a;
+            color: #94a3b8;
+            transition: all 0.2s;
+        }
+        .operator-btn.selected {
+            border-color: #10b981;
+            background: #064e3b;
+            color: #ffffff;
+            font-weight: bold;
+            box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+
+        .history-row {
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center p-2 sm:p-4">
+
+<div class="w-full h-full bg-slate-900 border-4 border-slate-800 rounded-[28px] shadow-2xl p-4 flex flex-col gap-3 relative overflow-hidden">
+    
+    <!-- 共通ヘッダー -->
+    <div class="flex justify-between items-center border-b-2 border-slate-800 pb-3 z-10">
+        <div class="flex items-center gap-3">
+            <div class="bg-emerald-500/20 p-2 rounded-xl text-emerald-400">
+                <i class="fa-solid fa-industry text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg font-black text-white tracking-wider flex items-center gap-2">
+                    PRESS MONITOR PRO
+                </h1>
+            </div>
+        </div>
+        
+        <!-- 中央：現在のステータス・時刻 -->
+        <div class="flex items-center gap-3 bg-slate-950/60 px-4 py-1.5 rounded-2xl border border-slate-800/80">
+            <div class="status-indicator transition-all" id="current-status-label">待機中</div>
+            <div id="live-time" class="text-slate-400 text-sm font-mono font-bold">12:00:00</div>
+        </div>
+        
+        <!-- 右側：タブ切り替え＆クリアボタン -->
+        <div class="flex items-center gap-3">
+            <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex gap-1">
+                <button id="tab-dashboard" onclick="switchView('dashboard')" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow">
+                    <i class="fa-solid fa-gauge-high mr-1"></i>稼働モニター
+                </button>
+                <button id="tab-history" onclick="switchView('history')" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white">
+                    <i class="fa-solid fa-list-check mr-1"></i>作業日報・履歴
+                </button>
+            </div>
+            
+            <button class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all active:scale-95" id="btn-reset" onclick="openResetModal()">
+                <i class="fa-solid fa-rotate-left"></i>
+                <span id="reset-text">データクリア</span>
+            </button>
+        </div>
+    </div>
+
+    <div id="view-dashboard" class="flex-1 flex flex-col gap-3 fade-in">
+        
+        <!-- 性能稼働率パネル -->
+        <div class="bg-gradient-to-b from-slate-900 to-slate-850 border-4 border-emerald-500/80 rounded-2xl p-3 flex flex-col justify-center items-center relative transition-all shadow-lg shadow-emerald-950/20 flex-[0.85]" id="rate-box">
+            <p class="text-xs font-black text-emerald-400 tracking-widest uppercase mb-0.5">
+                CURRENT PERFORMANCE RATE / 現在の性能稼働率
+            </p>
+            <div class="flex items-baseline justify-center">
+                <span class="font-mono text-7xl sm:text-8xl font-black text-emerald-400 tracking-tighter drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" id="perf-rate">100.0</span>
+                <span class="text-4xl sm:text-5xl text-emerald-400 font-black ml-1.5">%</span>
+            </div>
+            <div class="absolute right-4 top-3 flex items-center gap-1 bg-slate-950/80 px-3 py-1 rounded-full border border-slate-700 text-[9px] font-bold text-slate-400">
+                <i class="fa-solid fa-calculator text-emerald-400"></i>
+                <span>(60 ÷ 設定SPM × 生産数) ÷ (稼働時間 ＋ 金型交換 ＋ 異常停止)</span>
+            </div>
+        </div>
+
+        <!-- メイングリッド -->
+        <div class="grid grid-cols-12 gap-3 flex-grow flex-[1.25] overflow-hidden">
+            
+            <!-- 左側：品番・SPM・作業員選択エリア -->
+            <div class="col-span-4 flex flex-col gap-2 h-full">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
+                    <p class="text-[10px] font-black text-emerald-400 mb-0.5 flex items-center justify-between">
+                        <span><i class="fa-solid fa-cubes mr-1"></i>部品番号 (品番)</span>
+                        <span class="text-[8px] text-slate-400">予測候補・SPM自動入力</span>
+                    </p>
+                    <div class="relative">
+                        <input type="text" id="part-no-input" list="part-candidates" placeholder="例: SP-200" class="bg-slate-950 border-2 border-emerald-600 focus:border-emerald-400 rounded-xl w-full p-1 text-white font-mono text-lg text-center focus:outline-none transition-colors">
+                        <datalist id="part-candidates">
+                            <option value="SP-200">SP-200 (SPM: 15.0)</option>
+                            <option value="SP-210">SP-210 (SPM: 18.0)</option>
+                            <option value="DIE-A100">DIE-A100 (SPM: 12.0)</option>
+                            <option value="DIE-B200">DIE-B200 (SPM: 20.0)</option>
+                            <option value="FRAME-50">FRAME-50 (SPM: 10.5)</option>
+                        </datalist>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
+                    <p class="text-[10px] font-black text-slate-300 mb-0.5 flex items-center justify-between">
+                        <span><i class="fa-solid fa-gauge-simple-high mr-1"></i>設定値 (SPM)</span>
+                        <span class="text-[8px] text-slate-400">1分あたりの個数</span>
+                    </p>
+                    <div class="relative">
+                        <input type="number" id="spm-setting" value="15.0" step="0.1" min="0.1" class="bg-slate-950 border-2 border-slate-700 focus:border-emerald-500 rounded-xl w-full p-1 text-white font-mono text-xl text-center focus:outline-none transition-colors">
+                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[10px] font-mono">SPM</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
+                    <div class="flex justify-between items-center mb-1">
+                        <p class="text-[10px] font-black text-slate-300 flex items-center gap-1">
+                            <i class="fa-solid fa-users-gear text-emerald-400"></i>
+                            <span>作業員選択 (複数選択可・最大4名)</span>
+                        </p>
+                        <button onclick="openOperatorModal()" class="text-[9px] text-emerald-400 hover:underline">
+                            <i class="fa-solid fa-pen-to-square mr-0.5"></i>名前編集
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-2 gap-1.5" id="operator-btn-group">
+                    </div>
+                </div>
+            </div>
+
+            <!-- 中央：時刻・タイマーコンテナ -->
+            <div class="col-span-5 bg-slate-950 border-2 border-slate-800 rounded-2xl p-2 flex flex-col justify-between items-center h-full">
+                <div class="w-full grid grid-cols-2 gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1">
+                    <div class="text-left">
+                        <p class="text-[9px] text-slate-400 font-black tracking-wider">MFG START / 製造開始</p>
+                        <p id="time-start-label" class="font-mono text-sm text-emerald-400 font-black">未記録</p>
+                    </div>
+                    <div class="text-right border-l border-slate-800 pl-2">
+                        <p class="text-[9px] text-slate-400 font-black tracking-wider">MFG END / 製造終了</p>
+                        <p id="time-end-label" class="font-mono text-sm text-rose-400 font-black">未記録</p>
+                    </div>
+                </div>
+
+                <div class="text-center my-0.5 flex flex-col justify-center items-center">
+                    <p class="text-[9px] font-black text-slate-500 tracking-widest mb-0.5">
+                        RUNNING TIME / 稼働経過時間
+                    </p>
+                    <div class="font-mono text-4xl text-white tracking-wider font-black leading-none" id="main-clock">
+                        00:00:00
+                    </div>
+                    <div class="text-[9px] font-bold text-slate-500 mt-1" id="clock-sub">
+                        READY / 製造開始ボタンを押してください
+                    </div>
+                </div>
+
+                <div class="w-full grid grid-cols-3 gap-1.5 border-t border-slate-900 pt-1.5">
+                    <div class="text-center bg-slate-900/50 p-1 rounded-xl border border-slate-900">
+                        <p class="text-[9px] text-amber-500 font-bold mb-0.5"><i class="fa-solid fa-arrows-rotate mr-1"></i>金型交換</p>
+                        <p class="font-mono text-xs text-white font-bold" id="time-mold">00:00:00</p>
+                    </div>
+                    <div class="text-center bg-slate-900/50 p-1 rounded-xl border border-slate-900">
+                        <p class="text-[9px] text-sky-400 font-bold mb-0.5"><i class="fa-solid fa-mug-hot mr-1"></i>計画停止</p>
+                        <p class="font-mono text-xs text-white font-bold" id="time-break">00:00:00</p>
+                    </div>
+                    <div class="text-center bg-slate-900/50 p-1 rounded-xl border border-slate-900">
+                        <p class="text-[9px] text-rose-500 font-bold mb-0.5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>異常停止</p>
+                        <p class="font-mono text-xs text-white font-bold" id="time-stop">00:00:00</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右側：目標数・自動集計生産数 -->
+            <div class="col-span-3 flex flex-col gap-2 h-full">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-center flex-1">
+                    <p class="text-[10px] font-black text-slate-400 mb-0.5 flex items-center gap-1">
+                        <i class="fa-solid fa-bullseye text-slate-400"></i>
+                        <span>Target / 目標数</span>
+                    </p>
+                    <div class="relative mt-auto">
+                        <input type="number" id="target-count" value="1200" min="1" class="bg-slate-950 border-2 border-slate-700 focus:border-emerald-500 rounded-xl w-full p-1 text-white font-mono text-xl text-center focus:outline-none transition-colors">
+                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[10px] font-mono">pcs</span>
+                    </div>
+                </div>
+
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-center items-center flex-[1.3]">
+                    <p class="text-[10px] font-black text-slate-400 mb-0.5 tracking-wider uppercase">
+                        Accumulated / 自動集計生産数
+                    </p>
+                    <p class="text-[8px] text-slate-500 mb-1 text-center leading-tight">
+                        稼働秒数×設定SPMから自動積算
+                    </p>
+                    <div class="font-mono text-3xl font-black text-white leading-none mb-0.5" id="total-count">
+                        0
+                    </div>
+                    <div class="text-[9px] text-slate-400 font-bold mt-1">
+                        目標: <span id="target-val" class="font-mono text-white font-black">1,200</span> pcs
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ビューB: 日報・履歴一覧 -->
+    <div id="view-history" class="hidden flex-1 flex flex-col gap-3 fade-in overflow-hidden">
+        <div class="bg-slate-850 border border-slate-800 rounded-2xl p-4 flex-1 flex flex-col gap-3 overflow-hidden">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-3 flex-wrap">
+                    <h2 class="text-base font-black text-emerald-400 flex items-center gap-2">
+                        <i class="fa-solid fa-list-check"></i>
+                        <span>保存済み部品別日報データ</span>
+                    </h2>
+                    
+                    <!-- 設備名選択プルダウン (保持機能あり) -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-gears text-emerald-400"></i>
+                        <span class="font-bold">設備名:</span>
+                        <select id="equipment-select" class="bg-slate-900 border border-slate-700 text-emerald-400 font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer">
+                            <option value="1軸100tプレス">1軸100tプレス</option>
+                            <option value="2軸200tプレス">2軸200tプレス</option>
+                            <option value="高速300tプレス">高速300tプレス</option>
+                            <option value="Aライン プレス機">Aライン プレス機</option>
+                            <option value="Bライン プレス機">Bライン プレス機</option>
+                        </select>
+                    </div>
+
+                    <!-- 報告先メールアドレス -->
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>報告先メール:</span>
+                        <input type="email" id="report-email" value="factory-report@example.com" class="bg-transparent border-none text-emerald-400 font-bold focus:outline-none w-[180px]" title="終業報告の送信先メールアドレス">
+                    </div>
+                </div>
+
+                <!-- メール送信 ＆ Excel出力ボタングループ -->
+                <div class="flex items-center gap-2">
+                    <button class="bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 px-4 py-1.5 rounded-lg text-xs font-black flex items-center gap-2 active:scale-95 transition-all shadow-lg shadow-sky-950/50" onclick="sendSelectedMailWithExcel()">
+                        <i class="fa-solid fa-paper-plane"></i>
+                        <span>選択中の日報をメール送信</span>
+                    </button>
+
+                    <button class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 border border-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 active:scale-95 transition-all" onclick="exportExcelReportFormat()">
+                        <i class="fa-solid fa-file-excel"></i>
+                        <span>エクセルで保存</span>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-auto rounded-xl border border-slate-800 bg-slate-950">
+                <table class="w-full text-left text-xs border-collapse" id="history-table">
+                    <thead>
+                        <tr class="bg-slate-900 text-slate-400 border-b border-slate-800 sticky top-0 z-10">
+                            <th class="p-2 font-bold text-center w-8">
+                                <input type="checkbox" id="check-all" onclick="toggleSelectAll(this)" title="全選択/全解除" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+                            </th>
+                            <th class="p-2 font-bold">日付</th>
+                            <th class="p-2 font-bold text-amber-400">作業員</th>
+                            <th class="p-2 font-bold text-center text-amber-200">人数</th>
+                            <th class="p-2 font-bold text-emerald-400">部品番号</th>
+                            <th class="p-2 font-bold">開始</th>
+                            <th class="p-2 font-bold">終了</th>
+                            <th class="p-2 font-bold text-white">生産数</th>
+                            <th class="p-2 font-bold text-amber-300">材料交換</th>
+                            <th class="p-2 font-bold text-purple-300">スクラップ</th>
+                            <th class="p-2 font-bold text-rose-300">停止理由</th>
+                            <th class="p-2 font-bold">稼働時間</th>
+                            <th class="p-2 font-bold text-amber-500">金型交換</th>
+                            <th class="p-2 font-bold text-sky-400">計画停止</th>
+                            <th class="p-2 font-bold text-rose-500">異常停止</th>
+                            <th class="p-2 font-bold text-emerald-400 text-right">性能稼働率</th>
+                            <th class="p-2 font-bold text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-900" id="history-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- 最下部：製造開始・終了 ＆ ステータス切り替えボタン -->
+    <div class="grid grid-cols-12 gap-3 h-[95px] shrink-0 mt-auto z-20">
+        
+        <div class="col-span-3 grid grid-rows-2 gap-2 h-full">
+            <button class="bg-slate-800 border border-slate-700 hover:bg-slate-750 rounded-xl text-slate-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-95" onclick="startMfg()" id="btn-start-shift">
+                <i class="fa-solid fa-play text-emerald-500"></i>
+                <span>製造開始</span>
+            </button>
+            <button class="bg-slate-800 border border-slate-700 hover:bg-slate-750 rounded-xl text-slate-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all opacity-50 pointer-events-none" onclick="openEndShiftModal()" id="btn-end-shift">
+                <i class="fa-solid fa-flag-checkered text-rose-500"></i>
+                <span>製造終了 (日報保存)</span>
+            </button>
+        </div>
+
+        <div class="col-span-9 grid grid-cols-4 gap-2.5 h-full">
+            <button class="btn btn-running text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('RUNNING')" id="btn-RUNNING">
+                <i class="fa-solid fa-circle-play text-4xl sm:text-5xl" id="run-icon"></i>
+                <span class="text-lg sm:text-xl font-black tracking-widest" id="run-text">稼働中</span>
+            </button>
+            <button class="btn btn-mold text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('MOLD')" id="btn-MOLD">
+                <i class="fa-solid fa-arrows-rotate text-xl sm:text-2xl mb-0.5"></i>
+                <span class="text-xs sm:text-sm font-black tracking-wider">金型交換</span>
+            </button>
+            <button class="btn btn-break text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('BREAK')" id="btn-BREAK">
+                <i class="fa-solid fa-mug-hot text-xl sm:text-2xl mb-0.5"></i>
+                <span class="text-xs sm:text-sm font-black tracking-wider">計画停止</span>
+            </button>
+            <button class="btn btn-stop text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('STOP')" id="btn-STOP">
+                <i class="fa-solid fa-triangle-exclamation text-xl sm:text-2xl mb-0.5"></i>
+                <span class="text-xs sm:text-sm font-black tracking-wider">異常停止</span>
+            </button>
+        </div>
+    </div>
+
+</div>
+
+<!-- モーダルダイアログ構成群 -->
+
+<!-- データクリア確認ポップアップモーダル -->
+<div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="reset-modal">
+    <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[420px] p-6 rounded-2xl shadow-2xl text-center transform scale-95 transition-all duration-200" id="reset-modal-card">
+        <h3 class="text-xl font-black text-amber-400 flex items-center justify-center gap-2 mb-3">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>データクリアの確認</span>
+        </h3>
+        <p class="text-xs text-slate-300 leading-relaxed mb-6">
+            本日のリアルタイム稼働データ（タイマー、生産数）を初期化（リセット）します。<br>
+            実行してもよろしいですか？
+        </p>
+        <div class="grid grid-cols-2 gap-3">
+            <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold text-xs transition-all" onclick="closeResetModal()">
+                キャンセル
+            </button>
+            <button class="bg-amber-600 hover:bg-amber-500 text-white py-2.5 rounded-xl font-black text-xs transition-all shadow-lg shadow-amber-950/30" onclick="confirmReset()">
+                はい、クリア実行
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="end-shift-modal">
+    <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[480px] p-5 rounded-2xl shadow-2xl text-center transform scale-95 transition-all duration-200" id="end-shift-modal-card">
+        <h3 class="text-lg font-black text-rose-400 flex items-center justify-center gap-2 mb-3">
+            <i class="fa-solid fa-circle-exclamation"></i>
+            <span>製造終了 (実績日報の保存)</span>
+        </h3>
+        
+        <div class="grid grid-cols-2 gap-2 text-left bg-slate-950 border border-slate-800 p-2.5 rounded-xl mb-3 text-xs">
+            <div>
+                <span class="text-slate-400 block text-[10px]">製造終了時刻</span>
+                <span id="modal-end-time" class="font-mono text-base font-bold text-rose-400">00:00:00</span>
+            </div>
+            <div>
+                <span class="text-slate-400 block text-[10px]">担当作業員 (人数)</span>
+                <span id="modal-worker-preview" class="font-bold text-amber-400 truncate block">未選択</span>
+            </div>
+        </div>
+
+        <div class="mb-4 text-left bg-slate-800/80 p-3 rounded-xl border border-slate-700">
+            <label class="text-xs font-black text-emerald-400 block mb-1 flex items-center justify-between">
+                <span><i class="fa-solid fa-cubes-stacked mr-1"></i>実際の生産数 (確定値)</span>
+                <span class="text-[9px] text-slate-400">自動積算値を基に微調整可能</span>
+            </label>
+            <div class="relative">
+                <input type="number" id="modal-actual-count" min="0" class="w-full bg-slate-950 border-2 border-emerald-500 rounded-xl py-2 px-3 text-white font-mono text-2xl text-center font-black focus:outline-none">
+                <span class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xs font-mono">pcs</span>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+            <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl font-bold text-xs transition-all" onclick="closeEndShiftModal()">
+                戻る
+            </button>
+            <button class="bg-rose-600 hover:bg-rose-500 text-white py-2.5 rounded-xl font-black text-xs transition-all shadow-lg shadow-rose-950/30" onclick="confirmEndMfg()">
+                確定して日報保存
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="operator-modal">
+    <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[420px] p-5 rounded-2xl shadow-2xl text-left transform scale-95 transition-all duration-200">
+        <h3 class="text-lg font-black text-emerald-400 flex items-center gap-2 mb-3">
+            <i class="fa-solid fa-user-pen"></i>
+            <span>作業員名の登録・編集 (最大4名)</span>
+        </h3>
+        <div class="grid grid-cols-1 gap-2.5 mb-4 text-xs">
+            <div>
+                <label class="text-slate-400 block mb-1">作業員 1</label>
+                <input type="text" id="op-name-0" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white font-bold">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">作業員 2</label>
+                <input type="text" id="op-name-1" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white font-bold">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">作業員 3</label>
+                <input type="text" id="op-name-2" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white font-bold">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">作業員 4</label>
+                <input type="text" id="op-name-3" class="w-full bg-slate-950 border border-slate-700 rounded p-2 text-white font-bold">
+            </div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-bold text-xs" onclick="closeOperatorModal()">キャンセル</button>
+            <button class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-xl font-black text-xs" onclick="saveOperatorNames()">保存する</button>
+        </div>
+    </div>
+</div>
+
+<div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="delete-confirm-modal">
+    <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[400px] p-5 rounded-2xl shadow-2xl text-center transform scale-95 transition-all duration-200">
+        <h3 class="text-lg font-black text-rose-400 flex items-center justify-center gap-2 mb-2">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+            <span>実績データの削除確認</span>
+        </h3>
+        <p class="text-xs text-slate-300 mb-4">この実績レコードを削除します。よろしいですか？</p>
+        <input type="hidden" id="delete-record-id">
+        <div class="flex justify-center gap-3">
+            <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-bold text-xs" onclick="closeDeleteModal()">キャンセル</button>
+            <button class="bg-rose-600 hover:bg-rose-500 text-white px-5 py-2 rounded-xl font-black text-xs" onclick="confirmDeleteHistory()">削除実行</button>
+        </div>
+    </div>
+</div>
+
+<div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex justify-center items-center opacity-0 pointer-events-none transition-all duration-200" id="edit-record-modal">
+    <div class="bg-slate-900 border-2 border-slate-700 w-[90%] max-w-[560px] p-5 rounded-2xl shadow-2xl text-left transform scale-95 transition-all duration-200">
+        <h3 class="text-lg font-black text-emerald-400 flex items-center gap-2 mb-3">
+            <i class="fa-solid fa-pen-to-square"></i>
+            <span>日報実績の全項目修正・補正</span>
+        </h3>
+        <input type="hidden" id="edit-record-id">
+        <div class="grid grid-cols-2 gap-2.5 text-xs mb-4">
+            <div>
+                <label class="text-slate-400 block mb-1">日付 (YYYY/MM/DD)</label>
+                <input type="text" id="edit-date" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">作業員名 (複数可)</label>
+                <input type="text" id="edit-operator" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">部品番号 (品番)</label>
+                <input type="text" id="edit-partno" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">生産数 (pcs)</label>
+                <input type="number" id="edit-count" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-amber-300 block mb-1">材料交換 (回)</label>
+                <input type="number" id="edit-material-count" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-purple-300 block mb-1">スクラップ交換 (回)</label>
+                <input type="number" id="edit-scrap-count" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div class="col-span-2">
+                <label class="text-rose-300 block mb-1">停止理由 (自由記述)</label>
+                <input type="text" id="edit-stop-reason" placeholder="例: センサー異常・刃具交換等" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">開始時間 (HH:MM:SS)</label>
+                <input type="text" id="edit-start" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">終了時間 (HH:MM:SS)</label>
+                <input type="text" id="edit-end" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">設定SPM</label>
+                <input type="number" step="0.1" id="edit-spm" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">稼働時間 (分)</label>
+                <input type="number" id="edit-running-min" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">金型交換時間 (分)</label>
+                <input type="number" id="edit-mold-min" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div>
+                <label class="text-slate-400 block mb-1">計画停止時間 (分)</label>
+                <input type="number" id="edit-break-min" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+            <div class="col-span-2">
+                <label class="text-slate-400 block mb-1">異常停止時間 (分)</label>
+                <input type="number" id="edit-stop-min" class="w-full bg-slate-950 border border-slate-700 rounded p-1.5 text-white font-bold font-mono">
+            </div>
+        </div>
+        <div class="flex justify-end gap-2">
+            <button class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2 rounded-xl font-bold text-xs" onclick="closeEditRecordModal()">キャンセル</button>
+            <button class="bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2 rounded-xl font-black text-xs" onclick="saveEditedRecord()">更新保存</button>
+        </div>
+    </div>
+</div>
+
+<div class="fixed top-8 left-1/2 -translate-x-1/2 bg-emerald-600 border border-emerald-400 text-white px-6 py-3 rounded-full font-bold text-sm shadow-2xl flex items-center gap-2 transition-all opacity-0 pointer-events-none z-50" id="toast">
+    <i class="fa-solid fa-circle-check"></i>
+    <span id="toast-text">データを保存しました</span>
+</div>
+
+<script>
+    const PART_MASTERS = {
+        'SP-200': 15.0,
+        'SP-210': 18.0,
+        'DIE-A100': 12.0,
+        'DIE-B200': 20.0,
+        'FRAME-50': 10.5
+    };
+
+    const CONFIG = {
+        INITIAL_TARGET_COUNT: 1200,
+        LOCAL_STORAGE_KEY: 'press_viz_logs_v3.3',
+        EMAIL_STORAGE_KEY: 'press_report_email_v3.3',
+        EQUIPMENT_STORAGE_KEY: 'press_equipment_name_v3.3',
+        OPERATORS_STORAGE_KEY: 'press_operators_v3.3',
+        PERFORMANCE_GOOD_LIMIT: 95,
+        PERFORMANCE_NORMAL_LIMIT: 85,
+    };
+
+    let operators = ['山田', '佐藤', '鈴木', '田中'];
+    let selectedOperators = [true, false, false, false];
+
+    let state = {
+        isShiftActive: false,
+        status: 'IDLE',
+        startTime: null,
+        endTime: null,
+        
+        runningSeconds: 0,
+        moldSeconds: 0,
+        breakSeconds: 0,
+        stopSeconds: 0,
+        
+        accumulatedCount: 0,
+        settingSPM: 15.0,
+        targetCount: CONFIG.INITIAL_TARGET_COUNT,
+        partNo: 'SP-200'
+    };
+
+    let historyLogs = [];
+    let selectedRecordId = null;
+    let lastTickTime = null;
+
+    const rateEl = document.getElementById('perf-rate');
+    const clockEl = document.getElementById('main-clock');
+    const countEl = document.getElementById('total-count');
+    const statusLabel = document.getElementById('current-status-label');
+    const clockSub = document.getElementById('clock-sub');
+    const rateBox = document.getElementById('rate-box');
+    const timeStartLabel = document.getElementById('time-start-label');
+    const timeEndLabel = document.getElementById('time-end-label');
+    
+    const timeMoldEl = document.getElementById('time-mold');
+    const timeBreakEl = document.getElementById('time-break');
+    const timeStopEl = document.getElementById('time-stop');
+    
+    const runBtn = document.getElementById('btn-RUNNING');
+    const runIcon = document.getElementById('run-icon');
+    const runText = document.getElementById('run-text');
+    const btnStartShift = document.getElementById('btn-start-shift');
+    const btnEndShift = document.getElementById('btn-end-shift');
+
+    const partNoInput = document.getElementById('part-no-input');
+    const spmSettingInput = document.getElementById('spm-setting');
+    const targetInput = document.getElementById('target-count');
+    const targetDisplayVal = document.getElementById('target-val');
+    const reportEmailInput = document.getElementById('report-email');
+    const equipmentSelect = document.getElementById('equipment-select');
+
+    let checkedRecordIds = new Set();
+
+    window.onload = function() {
+        const savedEmail = localStorage.getItem(CONFIG.EMAIL_STORAGE_KEY);
+        if (savedEmail) {
+            reportEmailInput.value = savedEmail;
+        } else {
+            localStorage.setItem(CONFIG.EMAIL_STORAGE_KEY, reportEmailInput.value);
+        }
+
+        const savedEquipment = localStorage.getItem(CONFIG.EQUIPMENT_STORAGE_KEY);
+        if (savedEquipment) {
+            equipmentSelect.value = savedEquipment;
+        } else {
+            localStorage.setItem(CONFIG.EQUIPMENT_STORAGE_KEY, equipmentSelect.value);
+        }
+        
+        const saveEmailFn = (e) => {
+            localStorage.setItem(CONFIG.EMAIL_STORAGE_KEY, e.target.value.trim());
+        };
+        reportEmailInput.addEventListener('input', saveEmailFn);
+        reportEmailInput.addEventListener('change', saveEmailFn);
+
+        equipmentSelect.addEventListener('change', (e) => {
+            localStorage.setItem(CONFIG.EQUIPMENT_STORAGE_KEY, e.target.value);
+            showToast("設備名を保存・維持しました");
+        });
+
+        const savedOps = localStorage.getItem(CONFIG.OPERATORS_STORAGE_KEY);
+        if (savedOps) {
+            try { operators = JSON.parse(savedOps); } catch(e){}
+        }
+        renderOperatorButtons();
+
+        try {
+            const saved = localStorage.getItem(CONFIG.LOCAL_STORAGE_KEY);
+            if (saved) historyLogs = JSON.parse(saved);
+        } catch (e) {}
+
+        partNoInput.value = state.partNo;
+        spmSettingInput.value = state.settingSPM.toFixed(1);
+        targetInput.value = CONFIG.INITIAL_TARGET_COUNT;
+
+        partNoInput.addEventListener('input', (e) => {
+            const val = e.target.value.trim().toUpperCase();
+            state.partNo = val;
+            if (PART_MASTERS[val]) {
+                state.settingSPM = PART_MASTERS[val];
+                spmSettingInput.value = state.settingSPM.toFixed(1);
+                updateCalculations();
+            }
+        });
+
+        spmSettingInput.addEventListener('input', (e) => {
+            state.settingSPM = parseFloat(e.target.value) || 0.1;
+            updateCalculations();
+        });
+
+        targetInput.addEventListener('input', (e) => {
+            state.targetCount = parseInt(e.target.value) || 1;
+            targetDisplayVal.innerText = state.targetCount.toLocaleString();
+        });
+
+        lastTickTime = Date.now();
+        setInterval(updateClock, 1000);
+        setInterval(onTimerTick, 1000);
+        renderHistoryTable();
+    };
+
+    function renderOperatorButtons() {
+        const container = document.getElementById('operator-btn-group');
+        if (!container) return;
+        container.innerHTML = operators.map((op, idx) => `
+            <button onclick="toggleOperatorSelect(${idx})" class="operator-btn py-2 px-1 rounded-xl text-xs font-bold text-center truncate ${selectedOperators[idx] ? 'selected' : ''}">
+                ${op}
+            </button>
+        `).join('');
+    }
+
+    function toggleOperatorSelect(idx) {
+        selectedOperators[idx] = !selectedOperators[idx];
+        renderOperatorButtons();
+    }
+
+    function openOperatorModal() {
+        for (let i = 0; i < 4; i++) {
+            const input = document.getElementById(`op-name-${i}`);
+            if (input) input.value = operators[i] || '';
+        }
+        const modal = document.getElementById('operator-modal');
+        if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeOperatorModal() {
+        const modal = document.getElementById('operator-modal');
+        if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function saveOperatorNames() {
+        for (let i = 0; i < 4; i++) {
+            const input = document.getElementById(`op-name-${i}`);
+            if (input && input.value.trim()) {
+                operators[i] = input.value.trim();
+            }
+        }
+        localStorage.setItem(CONFIG.OPERATORS_STORAGE_KEY, JSON.stringify(operators));
+        renderOperatorButtons();
+        closeOperatorModal();
+        showToast("作業員名を更新・保存しました");
+    }
+
+    function getSelectedOperatorsText() {
+        const activeNames = operators.filter((_, idx) => selectedOperators[idx]);
+        return activeNames.length > 0 ? activeNames.join('・') : '未選択';
+    }
+
+    function getSelectedOperatorsCount() {
+        const activeNames = operators.filter((_, idx) => selectedOperators[idx]);
+        return activeNames.length > 0 ? activeNames.length : 1;
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('live-time').innerText = now.toTimeString().split(' ')[0];
+    }
+
+    function onTimerTick() {
+        const now = Date.now();
+        if (!lastTickTime) lastTickTime = now;
+        const deltaSec = (now - lastTickTime) / 1000;
+        lastTickTime = now;
+
+        if (!state.isShiftActive) return;
+
+        state.settingSPM = parseFloat(spmSettingInput.value) || 0.1;
+
+        if (state.status === 'RUNNING') {
+            state.runningSeconds += deltaSec;
+            state.accumulatedCount += (state.settingSPM / 60) * deltaSec;
+        } else if (state.status === 'MOLD') {
+            state.moldSeconds += deltaSec;
+        } else if (state.status === 'BREAK') {
+            state.breakSeconds += deltaSec;
+        } else if (state.status === 'STOP') {
+            state.stopSeconds += deltaSec;
+        }
+
+        updateCalculations();
+
+        clockEl.innerText = formatTime(Math.floor(state.runningSeconds));
+        countEl.innerText = Math.floor(state.accumulatedCount).toLocaleString();
+        
+        timeMoldEl.innerText = formatTime(Math.floor(state.moldSeconds));
+        timeBreakEl.innerText = formatTime(Math.floor(state.breakSeconds));
+        timeStopEl.innerText = formatTime(Math.floor(state.stopSeconds));
+    }
+
+    function updateCalculations() {
+        if (state.settingSPM <= 0) return;
+        let activeWorkSec = state.runningSeconds + state.moldSeconds + state.stopSeconds;
+        
+        if (activeWorkSec === 0) {
+            rateEl.innerText = "100.0";
+            rateEl.style.color = '#10b981';
+            return;
+        }
+
+        let stdCT = 60 / state.settingSPM;
+        let rate = ((stdCT * state.accumulatedCount) / activeWorkSec) * 100;
+        rate = Math.min(rate, 200.0);
+        
+        rateEl.innerText = rate.toFixed(1);
+        
+        if (rate >= CONFIG.PERFORMANCE_GOOD_LIMIT) {
+            rateEl.style.color = '#10b981';
+        } else if (rate >= CONFIG.PERFORMANCE_NORMAL_LIMIT) {
+            rateEl.style.color = '#fbbf24';
+        } else {
+            rateEl.style.color = '#f87171';
+        }
+    }
+
+    function startMfg() {
+        if (state.isShiftActive) return;
+
+        state.isShiftActive = true;
+        state.startTime = new Date();
+        lastTickTime = Date.now();
+        
+        timeStartLabel.innerText = state.startTime.toTimeString().split(' ')[0];
+        timeEndLabel.innerText = "製造中...";
+
+        btnStartShift.classList.add('opacity-50', 'pointer-events-none');
+        btnEndShift.classList.remove('opacity-50', 'pointer-events-none');
+
+        document.querySelectorAll('.btn').forEach(b => {
+            b.classList.remove('pointer-events-none');
+            b.style.opacity = '1';
+        });
+
+        setStatus('IDLE');
+        clockSub.innerText = 'READY / 稼働開始ボタンを押してください';
+        showToast("製造を開始しました。");
+    }
+
+    function openEndShiftModal() {
+        if (!state.isShiftActive) return;
+        const now = new Date();
+        document.getElementById('modal-end-time').innerText = now.toTimeString().split(' ')[0];
+        document.getElementById('modal-actual-count').value = Math.floor(state.accumulatedCount);
+        
+        const workerText = getSelectedOperatorsText();
+        const workerCount = getSelectedOperatorsCount();
+        document.getElementById('modal-worker-preview').innerText = `${workerText} (${workerCount}名)`;
+
+        const modal = document.getElementById('end-shift-modal');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeEndShiftModal() {
+        document.getElementById('end-shift-modal').classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function confirmEndMfg() {
+        state.endTime = new Date();
+        const actualCountInput = document.getElementById('modal-actual-count');
+        const actualCount = parseInt(actualCountInput.value) || 0;
+        
+        closeEndShiftModal();
+
+        // 1. 実績生産数をもとに日報データへ保存
+        saveCurrentToHistory(actualCount);
+
+        // 2. モニターの表示および内部タイマー・稼働率を完全にクリア
+        executeResetSilently();
+    }
+
+    function executeResetSilently() {
+        state.status = 'IDLE';
+        state.isShiftActive = false;
+        state.startTime = null;
+        state.endTime = null;
+        state.runningSeconds = 0;
+        state.moldSeconds = 0;
+        state.breakSeconds = 0;
+        state.stopSeconds = 0;
+        state.accumulatedCount = 0;
+        
+        document.querySelectorAll('.btn').forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('pointer-events-none');
+            b.style.opacity = '0.4';
+        });
+        statusLabel.className = 'status-indicator transition-all';
+        statusLabel.innerText = '待機中';
+        clockSub.innerText = 'READY / 製造開始ボタンを押してください';
+        clockSub.classList.remove('running');
+        rateBox.classList.remove('active');
+        
+        // 時刻・クロック・カウント・タイマー表示のクリア
+        timeStartLabel.innerText = "未記録";
+        timeEndLabel.innerText = "未記録";
+        clockEl.innerText = "00:00:00";
+        countEl.innerText = "0";
+        timeMoldEl.innerText = "00:00:00";
+        timeBreakEl.innerText = "00:00:00";
+        timeStopEl.innerText = "00:00:00";
+
+        // 性能稼働率の表示を初期状態(100.0%)にクリア
+        rateEl.innerText = "100.0";
+        rateEl.style.color = '#10b981';
+
+        btnStartShift.classList.remove('opacity-50', 'pointer-events-none');
+        btnEndShift.classList.add('opacity-50', 'pointer-events-none');
+
+        resetRunButton('稼働中');
+    }
+
+    function saveCurrentToHistory(finalCount) {
+        const today = new Date();
+        const dateStr = today.getFullYear() + '/' + (today.getMonth() + 1).toString().padStart(2, '0') + '/' + today.getDate().toString().padStart(2, '0');
+        
+        const countValue = (finalCount !== undefined && finalCount !== null) ? finalCount : Math.floor(state.accumulatedCount);
+        const totalActiveSec = state.runningSeconds + state.moldSeconds + state.stopSeconds;
+        
+        let calculatedRate = "100.0";
+        if (totalActiveSec > 0 && state.settingSPM > 0) {
+            const stdCT = 60 / state.settingSPM;
+            const rate = ((stdCT * countValue) / totalActiveSec) * 100;
+            calculatedRate = Math.min(rate, 200.0).toFixed(1);
+        }
+
+        const record = {
+            id: Date.now(),
+            date: dateStr,
+            equipment: equipmentSelect.value || '1軸100tプレス',
+            operator: getSelectedOperatorsText(),
+            workerCount: getSelectedOperatorsCount(),
+            partNo: partNoInput.value.trim() || '未設定',
+            start: state.startTime ? state.startTime.toTimeString().split(' ')[0] : '未記録',
+            end: state.endTime ? state.endTime.toTimeString().split(' ')[0] : '未記録',
+            settingSPM: state.settingSPM.toFixed(1),
+            count: countValue,
+            materialCount: 0,
+            scrapCount: 0,
+            stopReason: 'なし',
+            runningSec: Math.floor(state.runningSeconds),
+            moldSec: Math.floor(state.moldSeconds),
+            breakSec: Math.floor(state.breakSeconds),
+            stopSec: Math.floor(state.stopSeconds),
+            perfRate: calculatedRate
+        };
+
+        historyLogs.unshift(record);
+        checkedRecordIds.add(record.id);
+        
+        try {
+            localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(historyLogs));
+        } catch(e) {
+            console.error('保存エラー', e);
+        }
+        
+        renderHistoryTable();
+        showToast("日報データ（" + record.partNo + "：生産数 " + countValue + "pcs）を保存し、モニターを初期化しました");
+    }
+
+    function toggleSelectAll(masterCheckbox) {
+        if (masterCheckbox.checked) {
+            historyLogs.forEach(rec => checkedRecordIds.add(rec.id));
+        } else {
+            checkedRecordIds.clear();
+        }
+        renderHistoryTable();
+    }
+
+    function toggleRecordCheck(id, checkbox) {
+        if (checkbox.checked) {
+            checkedRecordIds.add(id);
+        } else {
+            checkedRecordIds.delete(id);
+        }
+        updateMasterCheckboxState();
+    }
+
+    function updateMasterCheckboxState() {
+        const master = document.getElementById('check-all');
+        if (master && historyLogs.length > 0) {
+            master.checked = checkedRecordIds.size === historyLogs.length;
+        }
+    }
+
+    // Excelフォーマット生成関数 (【生産数】表記、材料/スクラップ交換、停止理由に対応)
+    // Excelフォーマット生成関数
+    function generateExcelReportBlob(selectedLogs) {
+        const currentEquip = equipmentSelect.value || '1軸100tプレス';
+        
+        const sheetData = [
+            [`【${currentEquip}】 プレス生産作業日報 (PRESS PRODUCTION DAILY REPORT)`],
+            [
+                "出力日時: " + new Date().toLocaleString('ja-JP'),
+                "選択件数: " + selectedLogs.length + "件",
+                "総生産数: " + selectedLogs.reduce((sum, r) => sum + r.count, 0) + " pcs",
+                "平均性能稼働率: " + (selectedLogs.reduce((sum, r) => sum + parseFloat(r.perfRate), 0) / (selectedLogs.length || 1)).toFixed(1) + "%"
+            ],
+            [
+                "日付",
+                "設備名",
+                "作業員",
+                "作業人数",
+                "部品番号(品番)",
+                "製造開始時間",
+                "製造終了時間",
+                "生産数(pcs)",
+                "材料交換(回)",
+                "スクラップ交換(回)",
+                "停止理由",
+                "実生産稼働時間",
+                "金型交換時間",
+                "計画停止時間",
+                "異常停止時間",
+                "性能稼働率(%)"
+            ]
+        ];
+
+        selectedLogs.forEach(rec => {
+            sheetData.push([
+                rec.date,
+                rec.equipment || currentEquip,
+                rec.operator || '未選択',
+                rec.workerCount || 1,
+                rec.partNo,
+                rec.start,
+                rec.end,
+                rec.count,
+                rec.materialCount || 0,
+                rec.scrapCount || 0,
+                rec.stopReason || 'なし',
+                formatTime(rec.runningSec),
+                formatTime(rec.moldSec),
+                formatTime(rec.breakSec),
+                formatTime(rec.stopSec),
+                parseFloat(rec.perfRate)
+            ]);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        ws['!cols'] = [
+            { wch: 12 }, // 日付
+            { wch: 16 }, // 設備名
+            { wch: 18 }, // 作業員
+            { wch: 10 }, // 作業人数
+            { wch: 16 }, // 部品番号
+            { wch: 12 }, // 開始
+            { wch: 12 }, // 終了
+            { wch: 12 }, // 生産数
+            { wch: 12 }, // 材料交換
+            { wch: 14 }, // スクラップ交換
+            { wch: 20 }, // 停止理由
+            { wch: 14 }, // 稼働時間
+            { wch: 14 }, // 金型交換
+            { wch: 14 }, // 計画停止
+            { wch: 14 }, // 異常停止
+            { wch: 14 }  // 性能稼働率
+        ];
+
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "作業日報");
+        return wb;
+    }
+
+    function exportExcelReportFormat() {
+        const selectedLogs = historyLogs.filter(l => checkedRecordIds.has(l.id));
+        const targetLogs = selectedLogs.length > 0 ? selectedLogs : historyLogs;
+
+        if (targetLogs.length === 0) {
+            showToast("出力対象の日報データがありません");
+            return;
+        }
+
+        const wb = generateExcelReportBlob(targetLogs);
+        const fileName = `プレス作業日報_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+        showToast(`エクセルで保存完了 (${targetLogs.length}件)`);
+    }
+
+    async function sendSelectedMailWithExcel() {
+        const selectedLogs = historyLogs.filter(l => checkedRecordIds.has(l.id));
+
+        if (selectedLogs.length === 0) {
+            showToast("送信対象の日報データにチェックを入れてください");
+            return;
+        }
+
+        const currentEquip = equipmentSelect.value || '1軸100tプレス';
+        const targetDate = selectedLogs[0].date || new Date().toLocaleDateString('ja-JP');
+        const subjectStr = `【${currentEquip} 作業日報】${targetDate}`;
+
+        const wb = generateExcelReportBlob(selectedLogs);
+        const fileName = `プレス作業日報_${currentEquip}_${new Date().toISOString().slice(0, 10)}.xlsx`;
+        
+        const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+        const excelFile = new File([wbout], fileName, {
+            type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        });
+
+        const emailAddress = reportEmailInput.value || 'factory-report@example.com';
+        
+        try {
+            const tempInput = document.createElement('textarea');
+            tempInput.value = emailAddress;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            document.execCommand('copy');
+            document.body.removeChild(tempInput);
+        } catch (e) {}
+
+        let bodyText = `【宛先アドレス: ${emailAddress}】\n\n` +
+            `関係者各位\n\nお疲れ様です。${currentEquip} の作業実績（全${selectedLogs.length}件）を報告します。\n\n` +
+            `----------------------------------------\n` +
+            `■ 件名: ${subjectStr}\n` +
+            `----------------------------------------\n`;
+        
+        selectedLogs.forEach((rec, idx) => {
+            bodyText += `[${idx + 1}/${selectedLogs.length}] 日付:${rec.date} | 部品:${rec.partNo} | 作業員:${rec.operator || '未選択'}\n` +
+                `   時間:${rec.start}〜${rec.end} | 生産数:${rec.count}pcs | 材料交換:${rec.materialCount||0}回 | スクラップ:${rec.scrapCount||0}回 | 停止理由:${rec.stopReason||'なし'} | 稼働率:${rec.perfRate}%\n`;
+        });
+
+        bodyText += `----------------------------------------\n以上、よろしくお願いいたします。`;
+
+        if (navigator.canShare && navigator.canShare({ files: [excelFile] })) {
+            try {
+                await navigator.share({
+                    files: [excelFile],
+                    title: subjectStr,
+                    text: bodyText
+                });
+                showToast("共有メニューを開きました（宛先アドレスコピー済）");
+                return;
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error("Web Share API エラー:", err);
+                } else {
+                    return;
+                }
+            }
+        }
+
+        XLSX.writeFile(wb, fileName);
+        const encodedSubject = encodeURIComponent(subjectStr);
+        const mailtoUrl = `mailto:${emailAddress}?subject=${encodedSubject}&body=${encodeURIComponent(bodyText)}`;
+        showToast(`エクセル作成完了！メールを起動します`);
+        setTimeout(() => { window.location.href = mailtoUrl; }, 800);
+    }
+
+    function renderHistoryTable() {
+        const tbody = document.getElementById('history-body');
+        tbody.innerHTML = '';
+
+        if (historyLogs.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="17" class="p-6 text-center text-slate-500 font-bold">保存された日報データはありません。</td></tr>';
+            return;
+        }
+
+        historyLogs.forEach(rec => {
+            const isChecked = checkedRecordIds.has(rec.id);
+            const tr = document.createElement('tr');
+            tr.className = `history-row hover:bg-slate-900/80 transition-all ${isChecked ? 'bg-slate-900/90' : ''}`;
+
+            tr.innerHTML = `
+                <td class="p-2 text-center" onclick="event.stopPropagation()">
+                    <input type="checkbox" value="${rec.id}" ${isChecked ? 'checked' : ''} onclick="toggleRecordCheck(${rec.id}, this)" class="w-4 h-4 rounded border-slate-700 bg-slate-950 text-emerald-500 focus:ring-emerald-500 cursor-pointer">
+                </td>
+                <td class="p-2 font-mono text-white">${rec.date}</td>
+                <td class="p-2 font-mono text-amber-300 font-bold">${rec.operator || '未選択'}</td>
+                <td class="p-2 font-mono text-center text-amber-200 font-bold">${rec.workerCount || 1}名</td>
+                <td class="p-2 font-mono text-emerald-400 font-bold">${rec.partNo}</td>
+                <td class="p-2 font-mono text-slate-300">${rec.start}</td>
+                <td class="p-2 font-mono text-slate-300">${rec.end}</td>
+                <td class="p-2 font-mono font-bold text-white">${rec.count}</td>
+                <td class="p-2 font-mono text-amber-300 font-bold">${rec.materialCount || 0}</td>
+                <td class="p-2 font-mono text-purple-300 font-bold">${rec.scrapCount || 0}</td>
+                <td class="p-2 text-slate-300 truncate max-w-[100px]">${rec.stopReason || 'なし'}</td>
+                <td class="p-2 font-mono">${formatTime(rec.runningSec)}</td>
+                <td class="p-2 font-mono text-amber-400">${formatTime(rec.moldSec)}</td>
+                <td class="p-2 font-mono text-sky-400">${formatTime(rec.breakSec)}</td>
+                <td class="p-2 font-mono text-rose-500">${formatTime(rec.stopSec)}</td>
+                <td class="p-2 font-mono font-bold text-emerald-400 text-right text-sm">${rec.perfRate}%</td>
+                <td class="p-2 text-center flex justify-center gap-1.5" onclick="event.stopPropagation()">
+                    <button class="bg-amber-950/60 hover:bg-amber-900 text-amber-300 p-1.5 rounded active:scale-90" onclick="openEditRecordModal(${rec.id})" title="全項目修正(補正)"><i class="fa-solid fa-pen-to-square"></i></button>
+                    <button class="bg-rose-950/40 hover:bg-rose-900/60 text-rose-400 p-1.5 rounded active:scale-90" onclick="openDeleteModal(${rec.id})" title="削除"><i class="fa-solid fa-trash-can"></i></button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        updateMasterCheckboxState();
+    }
+
+    function openEditRecordModal(id) {
+        const rec = historyLogs.find(l => l.id === id);
+        if (!rec) return;
+
+        document.getElementById('edit-record-id').value = rec.id;
+        document.getElementById('edit-date').value = rec.date || '';
+        document.getElementById('edit-operator').value = rec.operator || '';
+        document.getElementById('edit-partno').value = rec.partNo || '';
+        document.getElementById('edit-count').value = rec.count || 0;
+        document.getElementById('edit-material-count').value = rec.materialCount || 0;
+        document.getElementById('edit-scrap-count').value = rec.scrapCount || 0;
+        document.getElementById('edit-stop-reason').value = rec.stopReason || '';
+        document.getElementById('edit-spm').value = rec.settingSPM || 15.0;
+        document.getElementById('edit-start').value = rec.start || '';
+        document.getElementById('edit-end').value = rec.end || '';
+        document.getElementById('edit-running-min').value = Math.round(rec.runningSec / 60);
+        document.getElementById('edit-mold-min').value = Math.round(rec.moldSec / 60);
+        document.getElementById('edit-break-min').value = Math.round(rec.breakSec / 60);
+        document.getElementById('edit-stop-min').value = Math.round(rec.stopSec / 60);
+
+        const modal = document.getElementById('edit-record-modal');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeEditRecordModal() {
+        const modal = document.getElementById('edit-record-modal');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function saveEditedRecord() {
+        const id = parseInt(document.getElementById('edit-record-id').value);
+        const rec = historyLogs.find(l => l.id === id);
+        if (!rec) return;
+
+        rec.date = document.getElementById('edit-date').value.trim() || rec.date;
+        rec.operator = document.getElementById('edit-operator').value.trim() || '未登録';
+        rec.partNo = document.getElementById('edit-partno').value.trim() || '未設定';
+        rec.count = parseInt(document.getElementById('edit-count').value) || 0;
+        rec.materialCount = parseInt(document.getElementById('edit-material-count').value) || 0;
+        rec.scrapCount = parseInt(document.getElementById('edit-scrap-count').value) || 0;
+        rec.stopReason = document.getElementById('edit-stop-reason').value.trim() || 'なし';
+        
+        rec.settingSPM = (parseFloat(document.getElementById('edit-spm').value) || 0.1).toFixed(1);
+        rec.start = document.getElementById('edit-start').value.trim() || rec.start;
+        rec.end = document.getElementById('edit-end').value.trim() || rec.end;
+        
+        rec.runningSec = (parseInt(document.getElementById('edit-running-min').value) || 0) * 60;
+        rec.moldSec = (parseInt(document.getElementById('edit-mold-min').value) || 0) * 60;
+        rec.breakSec = (parseInt(document.getElementById('edit-break-min').value) || 0) * 60;
+        rec.stopSec = (parseInt(document.getElementById('edit-stop-min').value) || 0) * 60;
+
+        const totalActiveSec = rec.runningSec + rec.moldSec + rec.stopSec;
+        if (totalActiveSec > 0 && parseFloat(rec.settingSPM) > 0) {
+            const stdCT = 60 / parseFloat(rec.settingSPM);
+            const rate = ((stdCT * rec.count) / totalActiveSec) * 100;
+            rec.perfRate = Math.min(rate, 200.0).toFixed(1);
+        } else {
+            rec.perfRate = "100.0";
+        }
+
+        localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(historyLogs));
+        renderHistoryTable();
+        closeEditRecordModal();
+        showToast("日報データを修正・保存しました");
+    }
+
+    // モーダル形式データクリア関数
+    function openResetModal() {
+        const modal = document.getElementById('reset-modal');
+        if (modal) modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeResetModal() {
+        const modal = document.getElementById('reset-modal');
+        if (modal) modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function confirmReset() {
+        closeResetModal();
+        executeReset();
+    }
+
+    function openDeleteModal(id) {
+        document.getElementById('delete-record-id').value = id;
+        const modal = document.getElementById('delete-confirm-modal');
+        modal.classList.remove('opacity-0', 'pointer-events-none');
+    }
+
+    function closeDeleteModal() {
+        const modal = document.getElementById('delete-confirm-modal');
+        modal.classList.add('opacity-0', 'pointer-events-none');
+    }
+
+    function confirmDeleteHistory() {
+        const id = parseInt(document.getElementById('delete-record-id').value);
+        historyLogs = historyLogs.filter(l => l.id !== id);
+        if (selectedRecordId === id) selectedRecordId = null;
+        localStorage.setItem(CONFIG.LOCAL_STORAGE_KEY, JSON.stringify(historyLogs));
+        renderHistoryTable();
+        closeDeleteModal();
+        showToast("実績データを削除しました。");
+    }
+
+    function setStatus(newStatus) {
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        statusLabel.className = 'status-indicator transition-all';
+
+        if (state.status === 'RUNNING' && newStatus === 'RUNNING') {
+            state.status = 'IDLE';
+            statusLabel.innerText = '一時停止中';
+            statusLabel.classList.add('status-PAUSE');
+
+            clockSub.innerText = 'PAUSED / 一時停止中';
+            clockSub.classList.remove('running');
+            rateBox.classList.remove('active');
+            
+            runBtn.className = 'btn btn-running active';
+            runIcon.className = 'fa-solid fa-circle-play text-4xl sm:text-5xl';
+            runText.innerText = '稼働再開';
+            return;
+        }
+
+        if (state.status === newStatus) {
+            state.status = 'IDLE';
+            statusLabel.innerText = '待機中';
+            clockSub.innerText = 'PAUSED / 停止中';
+            clockSub.classList.remove('running');
+            rateBox.classList.remove('active');
+            
+            resetRunButton('稼働再開');
+        } else {
+            state.status = newStatus;
+            document.getElementById('btn-' + newStatus).classList.add('active');
+            
+            const labels = { 
+                'RUNNING': '生産中', 
+                'MOLD': '金型交換中', 
+                'BREAK': '計画停止中', 
+                'STOP': '異常停止中' 
+            };
+            statusLabel.innerText = labels[newStatus];
+            statusLabel.classList.add('status-' + newStatus);
+            
+            if (newStatus === 'RUNNING') {
+                clockSub.innerText = 'RUNNING NOW';
+                clockSub.classList.add('running');
+                rateBox.classList.add('active');
+                
+                runBtn.className = 'btn btn-pause active';
+                runIcon.className = 'fa-solid fa-circle-pause text-4xl sm:text-5xl';
+                runText.innerText = '一時停止';
+            } else {
+                clockSub.innerText = 'INDIRECT WORK / 非稼働';
+                clockSub.classList.remove('running');
+                rateBox.classList.remove('active');
+                
+                resetRunButton('稼働再開');
+            }
+        }
+    }
+
+    function resetRunButton(textLabel = '稼働中') {
+        runBtn.className = 'btn btn-running';
+        runIcon.className = 'fa-solid fa-circle-play text-4xl sm:text-5xl';
+        runText.innerText = textLabel;
+    }
+
+    function executeReset() {
+        state.status = 'IDLE';
+        state.isShiftActive = false;
+        state.startTime = null;
+        state.endTime = null;
+        state.runningSeconds = 0;
+        state.moldSeconds = 0;
+        state.breakSeconds = 0;
+        state.stopSeconds = 0;
+        state.accumulatedCount = 0;
+        
+        document.querySelectorAll('.btn').forEach(b => {
+            b.classList.remove('active');
+            b.classList.add('pointer-events-none');
+            b.style.opacity = '0.15';
+        });
+        statusLabel.className = 'status-indicator transition-all';
+        statusLabel.innerText = '待機中';
+        clockSub.innerText = 'READY / 製造開始ボタンを押してください';
+        clockSub.classList.remove('running');
+        rateBox.classList.remove('active');
+        
+        timeStartLabel.innerText = "未記録";
+        timeEndLabel.innerText = "未記録";
+
+        clockEl.innerText = "00:00:00";
+        countEl.innerText = "0";
+        timeMoldEl.innerText = "00:00:00";
+        timeBreakEl.innerText = "00:00:00";
+        timeStopEl.innerText = "00:00:00";
+
+        btnStartShift.classList.remove('opacity-50', 'pointer-events-none');
+        btnEndShift.classList.add('opacity-50', 'pointer-events-none');
+
+        resetRunButton('稼働中');
+        updateCalculations();
+        showToast("本日の稼働データ、タイマーをリセットしました。");
+    }
+
+    function switchView(viewName) {
+        const dashboard = document.getElementById('view-dashboard');
+        const history = document.getElementById('view-history');
+        const tabDash = document.getElementById('tab-dashboard');
+        const tabHist = document.getElementById('tab-history');
+
+        if (viewName === 'dashboard') {
+            dashboard.classList.remove('hidden');
+            history.classList.add('hidden');
+            tabDash.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow";
+            tabHist.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+        } else {
+            dashboard.classList.add('hidden');
+            history.classList.remove('hidden');
+            tabDash.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+            tabHist.className = "px-4 py-2 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow";
+            renderHistoryTable();
+        }
+    }
+
+    function showToast(message) {
+        const toast = document.getElementById('toast');
+        const text = document.getElementById('toast-text');
+        text.innerText = message;
+        toast.classList.remove('opacity-0', 'pointer-events-none');
+        toast.classList.add('opacity-100');
+        setTimeout(() => {
+            toast.classList.remove('opacity-100');
+            toast.classList.add('opacity-0', 'pointer-events-none');
+        }, 3000);
+    }
+
+    function formatTime(sec) {
+        const h = Math.floor(sec / 3600).toString().padStart(2, '0');
+        const m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
+        const s = Math.floor(sec % 60).toString().padStart(2, '0');
+        return `${h}:${m}:${s}`;
+    }
+</script>
+
+</body>
+</html>
