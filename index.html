@@ -63,8 +63,8 @@
 
         .btn-running, .btn-pause {
             grid-column: span 1;
-            font-size: 26px !important;
-            box-shadow: 0 0 30px rgba(16, 185, 129, 0.45) !important;
+            font-size: 22px !important;
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.45) !important;
             transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
             opacity: 0.4;
         }
@@ -72,14 +72,14 @@
         .btn-pause {
             background: #475569 !important;
             border: 3px solid #94a3b8 !important;
-            box-shadow: 0 0 30px rgba(148, 163, 184, 0.45) !important;
+            box-shadow: 0 0 25px rgba(148, 163, 184, 0.45) !important;
         }
 
         /* ヘッダー中央：現在のステータス表示 */
         .status-indicator {
-            padding: 6px 20px;
+            padding: 4px 16px;
             border-radius: 30px;
-            font-size: 15px;
+            font-size: 13px;
             font-weight: 900;
             background: #1e293b;
             border: 2px solid #334155;
@@ -145,76 +145,76 @@
         }
     </style>
 </head>
-<body class="bg-slate-950 text-slate-100 flex items-center justify-center p-2 sm:p-4">
+<body class="bg-slate-950 text-slate-100 flex items-center justify-center p-1 sm:p-2.5">
 
-<div class="w-full h-full bg-slate-900 border-4 border-slate-800 rounded-[28px] shadow-2xl p-4 flex flex-col gap-3 relative overflow-hidden">
+<div class="w-full h-full bg-slate-900 border-2 sm:border-4 border-slate-800 rounded-2xl sm:rounded-[24px] shadow-2xl p-2 sm:p-3 flex flex-col gap-2 relative overflow-hidden">
     
     <!-- 共通ヘッダー -->
-    <div class="flex justify-between items-center border-b-2 border-slate-800 pb-3 z-10">
-        <div class="flex items-center gap-3">
-            <div class="bg-emerald-500/20 p-2 rounded-xl text-emerald-400">
-                <i class="fa-solid fa-industry text-xl"></i>
+    <div class="flex justify-between items-center border-b border-slate-800 pb-2 z-10 shrink-0">
+        <div class="flex items-center gap-2 sm:gap-3">
+            <div class="bg-emerald-500/20 p-1.5 rounded-lg text-emerald-400">
+                <i class="fa-solid fa-industry text-lg sm:text-xl"></i>
             </div>
             <div>
-                <h1 class="text-lg font-black text-white tracking-wider flex items-center gap-2">
+                <h1 class="text-base sm:text-lg font-black text-white tracking-wider flex items-center gap-2">
                     PRESS MONITOR PRO
                 </h1>
             </div>
         </div>
         
         <!-- 中央：現在のステータス・時刻 -->
-        <div class="flex items-center gap-3 bg-slate-950/60 px-4 py-1.5 rounded-2xl border border-slate-800/80">
+        <div class="flex items-center gap-2 sm:gap-3 bg-slate-950/60 px-3 py-1 rounded-2xl border border-slate-800/80">
             <div class="status-indicator transition-all" id="current-status-label">待機中</div>
-            <div id="live-time" class="text-slate-400 text-sm font-mono font-bold">12:00:00</div>
+            <div id="live-time" class="text-slate-400 text-xs sm:text-sm font-mono font-bold">12:00:00</div>
         </div>
         
         <!-- 右側：タブ切り替え＆クリアボタン -->
-        <div class="flex items-center gap-3">
-            <div class="bg-slate-950 p-1 rounded-xl border border-slate-800 flex gap-1">
-                <button id="tab-dashboard" onclick="switchView('dashboard')" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-white bg-slate-800 shadow">
+        <div class="flex items-center gap-2">
+            <div class="bg-slate-950 p-0.5 rounded-lg border border-slate-800 flex gap-1">
+                <button id="tab-dashboard" onclick="switchView('dashboard')" class="px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all text-white bg-slate-800 shadow">
                     <i class="fa-solid fa-gauge-high mr-1"></i>稼働モニター
                 </button>
-                <button id="tab-history" onclick="switchView('history')" class="px-4 py-2 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white">
+                <button id="tab-history" onclick="switchView('history')" class="px-3 py-1.5 text-[11px] sm:text-xs font-bold rounded-md transition-all text-slate-400 hover:text-white">
                     <i class="fa-solid fa-list-check mr-1"></i>作業日報・履歴
                 </button>
             </div>
             
-            <button class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-2 transition-all active:scale-95" id="btn-reset" onclick="openResetModal()">
+            <button class="bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700 px-2.5 py-1.5 rounded-full text-[11px] sm:text-xs font-bold flex items-center gap-1.5 transition-all active:scale-95" id="btn-reset" onclick="openResetModal()">
                 <i class="fa-solid fa-rotate-left"></i>
-                <span id="reset-text">データクリア</span>
+                <span id="reset-text">クリア</span>
             </button>
         </div>
     </div>
 
-    <div id="view-dashboard" class="flex-1 flex flex-col gap-3 fade-in">
+    <div id="view-dashboard" class="flex-1 flex flex-col gap-2 overflow-hidden">
         
         <!-- 性能稼働率パネル -->
-        <div class="bg-gradient-to-b from-slate-900 to-slate-850 border-4 border-emerald-500/80 rounded-2xl p-3 flex flex-col justify-center items-center relative transition-all shadow-lg shadow-emerald-950/20 flex-[0.85]" id="rate-box">
-            <p class="text-xs font-black text-emerald-400 tracking-widest uppercase mb-0.5">
+        <div class="bg-gradient-to-b from-slate-900 to-slate-850 border-2 sm:border-4 border-emerald-500/80 rounded-xl sm:rounded-2xl py-1.5 px-3 flex flex-col justify-center items-center relative transition-all shadow-md shadow-emerald-950/20 shrink-0" id="rate-box">
+            <p class="text-[10px] sm:text-xs font-black text-emerald-400 tracking-widest uppercase mb-0">
                 CURRENT PERFORMANCE RATE / 現在の性能稼働率
             </p>
             <div class="flex items-baseline justify-center">
-                <span class="font-mono text-7xl sm:text-8xl font-black text-emerald-400 tracking-tighter drop-shadow-[0_0_15px_rgba(16,185,129,0.3)]" id="perf-rate">100.0</span>
-                <span class="text-4xl sm:text-5xl text-emerald-400 font-black ml-1.5">%</span>
+                <span class="font-mono text-5xl sm:text-6xl font-black text-emerald-400 tracking-tighter drop-shadow-[0_0_12px_rgba(16,185,129,0.3)]" id="perf-rate">100.0</span>
+                <span class="text-3xl sm:text-4xl text-emerald-400 font-black ml-1">%</span>
             </div>
-            <div class="absolute right-4 top-3 flex items-center gap-1 bg-slate-950/80 px-3 py-1 rounded-full border border-slate-700 text-[9px] font-bold text-slate-400">
+            <div class="absolute right-3 top-2 hidden sm:flex items-center gap-1 bg-slate-950/80 px-2.5 py-0.5 rounded-full border border-slate-700 text-[8px] font-bold text-slate-400">
                 <i class="fa-solid fa-calculator text-emerald-400"></i>
-                <span>(60 ÷ 設定SPM × 生産数) ÷ (稼働時間 ＋ 金型交換 ＋ 異常停止)</span>
+                <span>(60 ÷ 設定SPM × 生産数) ÷ (稼働 ＋ 金型交換 ＋ 異常停止)</span>
             </div>
         </div>
 
         <!-- メイングリッド -->
-        <div class="grid grid-cols-12 gap-3 flex-grow flex-[1.25] overflow-hidden">
+        <div class="grid grid-cols-12 gap-2 flex-1 min-h-0 overflow-hidden">
             
             <!-- 左側：品番・SPM・作業員選択エリア -->
-            <div class="col-span-4 flex flex-col gap-2 h-full">
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
-                    <p class="text-[10px] font-black text-emerald-400 mb-0.5 flex items-center justify-between">
+            <div class="col-span-4 flex flex-col gap-1.5 h-full min-h-0">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col justify-between flex-[0.9]">
+                    <p class="text-[9px] sm:text-[10px] font-black text-emerald-400 mb-0.5 flex items-center justify-between">
                         <span><i class="fa-solid fa-cubes mr-1"></i>部品番号 (品番)</span>
-                        <span class="text-[8px] text-slate-400">予測候補・SPM自動入力</span>
+                        <span class="text-[8px] text-slate-400">予測連動</span>
                     </p>
                     <div class="relative">
-                        <input type="text" id="part-no-input" list="part-candidates" placeholder="例: SP-200" class="bg-slate-950 border-2 border-emerald-600 focus:border-emerald-400 rounded-xl w-full p-1 text-white font-mono text-lg text-center focus:outline-none transition-colors">
+                        <input type="text" id="part-no-input" list="part-candidates" placeholder="例: SP-200" class="bg-slate-950 border border-emerald-600 focus:border-emerald-400 rounded-lg w-full py-0.5 px-1 text-white font-mono text-base sm:text-lg text-center focus:outline-none transition-colors">
                         <datalist id="part-candidates">
                             <option value="SP-200">SP-200 (SPM: 15.0)</option>
                             <option value="SP-210">SP-210 (SPM: 18.0)</option>
@@ -225,97 +225,97 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
-                    <p class="text-[10px] font-black text-slate-300 mb-0.5 flex items-center justify-between">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col justify-between flex-[0.9]">
+                    <p class="text-[9px] sm:text-[10px] font-black text-slate-300 mb-0.5 flex items-center justify-between">
                         <span><i class="fa-solid fa-gauge-simple-high mr-1"></i>設定値 (SPM)</span>
                         <span class="text-[8px] text-slate-400">1分あたりの個数</span>
                     </p>
                     <div class="relative">
-                        <input type="number" id="spm-setting" value="15.0" step="0.1" min="0.1" class="bg-slate-950 border-2 border-slate-700 focus:border-emerald-500 rounded-xl w-full p-1 text-white font-mono text-xl text-center focus:outline-none transition-colors">
-                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[10px] font-mono">SPM</span>
+                        <input type="number" id="spm-setting" value="15.0" step="0.1" min="0.1" class="bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-lg w-full py-0.5 px-1 text-white font-mono text-lg text-center focus:outline-none transition-colors">
+                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[9px] font-mono">SPM</span>
                     </div>
                 </div>
 
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-between flex-1">
-                    <div class="flex justify-between items-center mb-1">
-                        <p class="text-[10px] font-black text-slate-300 flex items-center gap-1">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col justify-between flex-[1.2] min-h-0">
+                    <div class="flex justify-between items-center mb-0.5">
+                        <p class="text-[9px] sm:text-[10px] font-black text-slate-300 flex items-center gap-1 truncate">
                             <i class="fa-solid fa-users-gear text-emerald-400"></i>
-                            <span>作業員選択 (複数選択可・最大4名)</span>
+                            <span>作業員 (最大4名)</span>
                         </p>
-                        <button onclick="openOperatorModal()" class="text-[9px] text-emerald-400 hover:underline">
-                            <i class="fa-solid fa-pen-to-square mr-0.5"></i>名前編集
+                        <button onclick="openOperatorModal()" class="text-[8px] sm:text-[9px] text-emerald-400 hover:underline shrink-0">
+                            <i class="fa-solid fa-pen-to-square mr-0.5"></i>編集
                         </button>
                     </div>
-                    <div class="grid grid-cols-2 gap-1.5" id="operator-btn-group">
+                    <div class="grid grid-cols-2 gap-1 overflow-y-auto" id="operator-btn-group">
                     </div>
                 </div>
             </div>
 
             <!-- 中央：時刻・タイマーコンテナ -->
-            <div class="col-span-5 bg-slate-950 border-2 border-slate-800 rounded-2xl p-2 flex flex-col justify-between items-center h-full">
-                <div class="w-full grid grid-cols-2 gap-2 bg-slate-900 border border-slate-800 rounded-xl px-3 py-1">
+            <div class="col-span-5 bg-slate-950 border-2 border-slate-800 rounded-xl sm:rounded-2xl p-1.5 sm:p-2 flex flex-col justify-between items-center h-full min-h-0">
+                <div class="w-full grid grid-cols-2 gap-1 bg-slate-900 border border-slate-800 rounded-lg px-2 py-0.5">
                     <div class="text-left">
-                        <p class="text-[9px] text-slate-400 font-black tracking-wider">MFG START / 製造開始</p>
-                        <p id="time-start-label" class="font-mono text-sm text-emerald-400 font-black">未記録</p>
+                        <p class="text-[8px] sm:text-[9px] text-slate-400 font-black tracking-wider">MFG START / 製造開始</p>
+                        <p id="time-start-label" class="font-mono text-xs sm:text-sm text-emerald-400 font-black">未記録</p>
                     </div>
-                    <div class="text-right border-l border-slate-800 pl-2">
-                        <p class="text-[9px] text-slate-400 font-black tracking-wider">MFG END / 製造終了</p>
-                        <p id="time-end-label" class="font-mono text-sm text-rose-400 font-black">未記録</p>
+                    <div class="text-right border-l border-slate-800 pl-1.5">
+                        <p class="text-[8px] sm:text-[9px] text-slate-400 font-black tracking-wider">MFG END / 製造終了</p>
+                        <p id="time-end-label" class="font-mono text-xs sm:text-sm text-rose-400 font-black">未記録</p>
                     </div>
                 </div>
 
-                <div class="text-center my-0.5 flex flex-col justify-center items-center">
-                    <p class="text-[9px] font-black text-slate-500 tracking-widest mb-0.5">
+                <div class="text-center my-0 flex flex-col justify-center items-center">
+                    <p class="text-[8px] sm:text-[9px] font-black text-slate-500 tracking-widest mb-0">
                         RUNNING TIME / 稼働経過時間
                     </p>
-                    <div class="font-mono text-4xl text-white tracking-wider font-black leading-none" id="main-clock">
+                    <div class="font-mono text-3xl sm:text-4xl text-white tracking-wider font-black leading-tight" id="main-clock">
                         00:00:00
                     </div>
-                    <div class="text-[9px] font-bold text-slate-500 mt-1" id="clock-sub">
+                    <div class="text-[8px] sm:text-[9px] font-bold text-slate-500" id="clock-sub">
                         READY / 製造開始ボタンを押してください
                     </div>
                 </div>
 
-                <div class="w-full grid grid-cols-3 gap-1.5 border-t border-slate-900 pt-1.5">
-                    <div class="text-center bg-slate-900/50 p-1 rounded-xl border border-slate-900">
-                        <p class="text-[9px] text-amber-500 font-bold mb-0.5"><i class="fa-solid fa-arrows-rotate mr-1"></i>金型交換</p>
-                        <p class="font-mono text-xs text-white font-bold" id="time-mold">00:00:00</p>
+                <div class="w-full grid grid-cols-3 gap-1 border-t border-slate-900 pt-1">
+                    <div class="text-center bg-slate-900/50 p-1 rounded-lg border border-slate-900">
+                        <p class="text-[8px] sm:text-[9px] text-amber-500 font-bold mb-0 truncate"><i class="fa-solid fa-arrows-rotate mr-0.5"></i>金型交換</p>
+                        <p class="font-mono text-[11px] sm:text-xs text-white font-bold" id="time-mold">00:00:00</p>
                     </div>
-                    <div class="text-center bg-slate-900/50 p-1 rounded-xl border border-slate-900">
-                        <p class="text-[9px] text-sky-400 font-bold mb-0.5"><i class="fa-solid fa-mug-hot mr-1"></i>計画停止</p>
-                        <p class="font-mono text-xs text-white font-bold" id="time-break">00:00:00</p>
+                    <div class="text-center bg-slate-900/50 p-1 rounded-lg border border-slate-900">
+                        <p class="text-[8px] sm:text-[9px] text-sky-400 font-bold mb-0 truncate"><i class="fa-solid fa-mug-hot mr-0.5"></i>計画停止</p>
+                        <p class="font-mono text-[11px] sm:text-xs text-white font-bold" id="time-break">00:00:00</p>
                     </div>
-                    <div class="text-center bg-slate-900/50 p-1 rounded-xl border border-slate-900">
-                        <p class="text-[9px] text-rose-500 font-bold mb-0.5"><i class="fa-solid fa-triangle-exclamation mr-1"></i>異常停止</p>
-                        <p class="font-mono text-xs text-white font-bold" id="time-stop">00:00:00</p>
+                    <div class="text-center bg-slate-900/50 p-1 rounded-lg border border-slate-900">
+                        <p class="text-[8px] sm:text-[9px] text-rose-500 font-bold mb-0 truncate"><i class="fa-solid fa-triangle-exclamation mr-0.5"></i>異常停止</p>
+                        <p class="font-mono text-[11px] sm:text-xs text-white font-bold" id="time-stop">00:00:00</p>
                     </div>
                 </div>
             </div>
 
             <!-- 右側：目標数・自動集計生産数 -->
-            <div class="col-span-3 flex flex-col gap-2 h-full">
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-center flex-1">
-                    <p class="text-[10px] font-black text-slate-400 mb-0.5 flex items-center gap-1">
+            <div class="col-span-3 flex flex-col gap-1.5 h-full min-h-0">
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col justify-center flex-[0.9]">
+                    <p class="text-[9px] sm:text-[10px] font-black text-slate-400 mb-0.5 flex items-center gap-1">
                         <i class="fa-solid fa-bullseye text-slate-400"></i>
                         <span>Target / 目標数</span>
                     </p>
                     <div class="relative mt-auto">
-                        <input type="number" id="target-count" value="1200" min="1" class="bg-slate-950 border-2 border-slate-700 focus:border-emerald-500 rounded-xl w-full p-1 text-white font-mono text-xl text-center focus:outline-none transition-colors">
-                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[10px] font-mono">pcs</span>
+                        <input type="number" id="target-count" value="1200" min="1" class="bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-lg w-full py-0.5 px-1 text-white font-mono text-lg text-center focus:outline-none transition-colors">
+                        <span class="absolute right-2 top-1/2 -translate-y-1/2 text-slate-500 font-bold text-[9px] font-mono">pcs</span>
                     </div>
                 </div>
 
-                <div class="bg-slate-800 border border-slate-700 rounded-xl p-2 flex flex-col justify-center items-center flex-[1.3]">
-                    <p class="text-[10px] font-black text-slate-400 mb-0.5 tracking-wider uppercase">
-                        Accumulated / 自動集計生産数
+                <div class="bg-slate-800 border border-slate-700 rounded-xl p-1.5 flex flex-col justify-center items-center flex-[1.3]">
+                    <p class="text-[9px] sm:text-[10px] font-black text-slate-400 mb-0 tracking-wider uppercase">
+                        Accumulated / 自動集計
                     </p>
-                    <p class="text-[8px] text-slate-500 mb-1 text-center leading-tight">
-                        稼働秒数×設定SPMから自動積算
+                    <p class="text-[7px] sm:text-[8px] text-slate-500 mb-0.5 text-center leading-tight">
+                        稼働秒数×設定SPM
                     </p>
-                    <div class="font-mono text-3xl font-black text-white leading-none mb-0.5" id="total-count">
+                    <div class="font-mono text-2xl sm:text-3xl font-black text-white leading-tight mb-0" id="total-count">
                         0
                     </div>
-                    <div class="text-[9px] text-slate-400 font-bold mt-1">
+                    <div class="text-[8px] sm:text-[9px] text-slate-400 font-bold">
                         目標: <span id="target-val" class="font-mono text-white font-black">1,200</span> pcs
                     </div>
                 </div>
@@ -326,20 +326,20 @@
     </div>
 
     <!-- ビューB: 日報・履歴一覧 -->
-    <div id="view-history" class="hidden flex-1 flex flex-col gap-3 fade-in overflow-hidden">
-        <div class="bg-slate-850 border border-slate-800 rounded-2xl p-4 flex-1 flex flex-col gap-3 overflow-hidden">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center gap-3 flex-wrap">
-                    <h2 class="text-base font-black text-emerald-400 flex items-center gap-2">
+    <div id="view-history" class="hidden flex-1 flex flex-col gap-2 fade-in overflow-hidden">
+        <div class="bg-slate-850 border border-slate-800 rounded-xl sm:rounded-2xl p-3 flex-1 flex flex-col gap-2 overflow-hidden">
+            <div class="flex justify-between items-center flex-wrap gap-2">
+                <div class="flex items-center gap-2 flex-wrap">
+                    <h2 class="text-sm sm:text-base font-black text-emerald-400 flex items-center gap-1.5">
                         <i class="fa-solid fa-list-check"></i>
                         <span>保存済み部品別日報データ</span>
                     </h2>
                     
                     <!-- 設備名選択プルダウン (保持機能あり) -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-gears text-emerald-400"></i>
-                        <span class="font-bold">設備名:</span>
-                        <select id="equipment-select" class="bg-slate-900 border border-slate-700 text-emerald-400 font-bold rounded px-2 py-0.5 focus:outline-none cursor-pointer">
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-400 flex items-center gap-1">
+                        <i class="fa-solid fa-gears text-emerald-400 text-[11px]"></i>
+                        <span class="font-bold text-[11px]">設備名:</span>
+                        <select id="equipment-select" class="bg-slate-900 border border-slate-700 text-emerald-400 font-bold rounded px-1.5 py-0.5 text-xs focus:outline-none cursor-pointer">
                             <option value="1軸100tプレス">1軸100tプレス</option>
                             <option value="2軸200tプレス">2軸200tプレス</option>
                             <option value="高速300tプレス">高速300tプレス</option>
@@ -349,22 +349,22 @@
                     </div>
 
                     <!-- 報告先メールアドレス -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1 text-xs text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-envelope"></i>
-                        <span>報告先メール:</span>
-                        <input type="email" id="report-email" value="factory-report@example.com" class="bg-transparent border-none text-emerald-400 font-bold focus:outline-none w-[180px]" title="終業報告の送信先メールアドレス">
+                    <div class="bg-slate-950 border border-slate-800 rounded-lg px-2 py-0.5 text-xs text-slate-400 flex items-center gap-1">
+                        <i class="fa-solid fa-envelope text-[11px]"></i>
+                        <span class="text-[11px]">報告先:</span>
+                        <input type="email" id="report-email" value="factory-report@example.com" class="bg-transparent border-none text-emerald-400 font-bold focus:outline-none text-xs w-[160px]" title="終業報告の送信先メールアドレス">
                     </div>
                 </div>
 
                 <!-- メール送信 ＆ Excel出力ボタングループ -->
                 <div class="flex items-center gap-2">
-                    <button class="bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 px-4 py-1.5 rounded-lg text-xs font-black flex items-center gap-2 active:scale-95 transition-all shadow-lg shadow-sky-950/50" onclick="sendSelectedMailWithExcel()">
-                        <i class="fa-solid fa-paper-plane"></i>
+                    <button class="bg-sky-600 hover:bg-sky-500 text-white border border-sky-400 px-3 py-1 rounded-lg text-xs font-black flex items-center gap-1.5 active:scale-95 transition-all shadow-md shadow-sky-950/50" onclick="sendSelectedMailWithExcel()">
+                        <i class="fa-solid fa-paper-plane text-[11px]"></i>
                         <span>選択中の日報をメール送信</span>
                     </button>
 
-                    <button class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 border border-emerald-600 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 active:scale-95 transition-all" onclick="exportExcelReportFormat()">
-                        <i class="fa-solid fa-file-excel"></i>
+                    <button class="bg-emerald-800 hover:bg-emerald-700 text-emerald-100 border border-emerald-600 px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-all" onclick="exportExcelReportFormat()">
+                        <i class="fa-solid fa-file-excel text-[11px]"></i>
                         <span>エクセルで保存</span>
                     </button>
                 </div>
@@ -403,35 +403,35 @@
     </div>
 
     <!-- 最下部：製造開始・終了 ＆ ステータス切り替えボタン -->
-    <div class="grid grid-cols-12 gap-3 h-[95px] shrink-0 mt-auto z-20">
+    <div class="grid grid-cols-12 gap-2 h-[76px] sm:h-[82px] shrink-0 mt-auto z-20">
         
-        <div class="col-span-3 grid grid-rows-2 gap-2 h-full">
+        <div class="col-span-3 grid grid-rows-2 gap-1.5 h-full">
             <button class="bg-slate-800 border border-slate-700 hover:bg-slate-750 rounded-xl text-slate-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all active:scale-95" onclick="startMfg()" id="btn-start-shift">
-                <i class="fa-solid fa-play text-emerald-500"></i>
+                <i class="fa-solid fa-play text-emerald-500 text-xs"></i>
                 <span>製造開始</span>
             </button>
             <button class="bg-slate-800 border border-slate-700 hover:bg-slate-750 rounded-xl text-slate-300 font-bold text-xs sm:text-sm flex items-center justify-center gap-1.5 transition-all opacity-50 pointer-events-none" onclick="openEndShiftModal()" id="btn-end-shift">
-                <i class="fa-solid fa-flag-checkered text-rose-500"></i>
+                <i class="fa-solid fa-flag-checkered text-rose-500 text-xs"></i>
                 <span>製造終了 (日報保存)</span>
             </button>
         </div>
 
-        <div class="col-span-9 grid grid-cols-4 gap-2.5 h-full">
-            <button class="btn btn-running text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('RUNNING')" id="btn-RUNNING">
-                <i class="fa-solid fa-circle-play text-4xl sm:text-5xl" id="run-icon"></i>
-                <span class="text-lg sm:text-xl font-black tracking-widest" id="run-text">稼働中</span>
+        <div class="col-span-9 grid grid-cols-4 gap-2 h-full">
+            <button class="btn btn-running text-white rounded-xl sm:rounded-2xl flex flex-col justify-center items-center gap-0.5 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('RUNNING')" id="btn-RUNNING">
+                <i class="fa-solid fa-circle-play text-2xl sm:text-3xl" id="run-icon"></i>
+                <span class="text-sm sm:text-base font-black tracking-widest" id="run-text">稼働中</span>
             </button>
-            <button class="btn btn-mold text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('MOLD')" id="btn-MOLD">
-                <i class="fa-solid fa-arrows-rotate text-xl sm:text-2xl mb-0.5"></i>
-                <span class="text-xs sm:text-sm font-black tracking-wider">金型交換</span>
+            <button class="btn btn-mold text-white rounded-xl sm:rounded-2xl flex flex-col justify-center items-center gap-0.5 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('MOLD')" id="btn-MOLD">
+                <i class="fa-solid fa-arrows-rotate text-lg sm:text-xl"></i>
+                <span class="text-[11px] sm:text-xs font-black tracking-wider">金型交換</span>
             </button>
-            <button class="btn btn-break text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('BREAK')" id="btn-BREAK">
-                <i class="fa-solid fa-mug-hot text-xl sm:text-2xl mb-0.5"></i>
-                <span class="text-xs sm:text-sm font-black tracking-wider">計画停止</span>
+            <button class="btn btn-break text-white rounded-xl sm:rounded-2xl flex flex-col justify-center items-center gap-0.5 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('BREAK')" id="btn-BREAK">
+                <i class="fa-solid fa-mug-hot text-lg sm:text-xl"></i>
+                <span class="text-[11px] sm:text-xs font-black tracking-wider">計画停止</span>
             </button>
-            <button class="btn btn-stop text-white rounded-2xl flex flex-col justify-center items-center gap-1 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('STOP')" id="btn-STOP">
-                <i class="fa-solid fa-triangle-exclamation text-xl sm:text-2xl mb-0.5"></i>
-                <span class="text-xs sm:text-sm font-black tracking-wider">異常停止</span>
+            <button class="btn btn-stop text-white rounded-xl sm:rounded-2xl flex flex-col justify-center items-center gap-0.5 active:scale-95 transition-all pointer-events-none border-2 shadow-lg" onclick="setStatus('STOP')" id="btn-STOP">
+                <i class="fa-solid fa-triangle-exclamation text-lg sm:text-xl"></i>
+                <span class="text-[11px] sm:text-xs font-black tracking-wider">異常停止</span>
             </button>
         </div>
     </div>
@@ -767,7 +767,7 @@
         const container = document.getElementById('operator-btn-group');
         if (!container) return;
         container.innerHTML = operators.map((op, idx) => `
-            <button onclick="toggleOperatorSelect(${idx})" class="operator-btn py-2 px-1 rounded-xl text-xs font-bold text-center truncate ${selectedOperators[idx] ? 'selected' : ''}">
+            <button onclick="toggleOperatorSelect(${idx})" class="operator-btn py-1 px-1 rounded-lg text-[11px] font-bold text-center truncate ${selectedOperators[idx] ? 'selected' : ''}">
                 ${op}
             </button>
         `).join('');
